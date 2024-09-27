@@ -31,7 +31,7 @@ const SignupButton = styled(Link)`
 const Header = () => {
   return (
     <HeaderContainer>
-      <SignupButton to="/signup">Showcase your work</SignupButton>
+      <SignupButton to="/signup">Showcase your work/ login</SignupButton>
     </HeaderContainer>
   );
 };
