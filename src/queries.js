@@ -6,19 +6,53 @@ export const GET_TATTOO_ARTISTS = gql`
     tattoo_artists {
       id
       name
-      address
-      facebook
+      location
       instagram
       twitter
-      location
+      facebook
       imageurl
       styles {
-        id
         style
       }
       work_images {
-        id
         imageurl
+      }
+    }
+  }
+`;
+
+export const GET_ARTISTS = gql`
+  query GetArtists {
+    tattoo_artists {
+      id
+      name
+      location
+      imageurl
+      styles {
+        style
+      }
+      work_images {
+        imageurl
+      }
+    }
+  }
+`;
+
+export const GET_ARTIST_BY_ID = gql`
+  query GetArtist($id: uuid!) {
+    tattoo_artists_by_pk(id: $id) {
+      name
+      location
+      address
+      imageurl
+      instagram
+      twitter
+      facebook
+      work_images {
+        imageurl
+      }
+      styles {
+        style
       }
     }
   }

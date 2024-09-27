@@ -4,6 +4,7 @@ import App from "./App";
 import { NhostProvider } from "@nhost/react";
 import nhost from "./nhost";
 import reportWebVitals from "./reportWebVitals";
+import "./index.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

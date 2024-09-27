@@ -1,48 +1,52 @@
-.App {
-  text-align: center;
-  background-color: black; /* Change background to black */
-  color: white; /* Set primary text color to white */
-}
-
-.App-header {
-  background-color: #000; /* Set header background to black */
+/* Global styling */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif;
+  background-color: #121212;
+  color: white;
   min-height: 100vh;
+}
+
+/* Main container styles */
+.container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: pink; /* Pink text for the header */
+  gap: 20px;
 }
 
-.App-link {
-  color: pink; /* Make links pink */
+.tattoo-artist-card {
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px;
+  width: 300px;
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-nav {
-  background-color: #000; /* Navigation background to black */
+.image-gallery {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 10px 0;
 }
 
-button {
-  background-color: pink; /* Pink buttons */
-  border: none;
-  color: black; /* Button text in black */
-  padding: 10px;
-  cursor: pointer;
+.image-gallery img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
 }
 
-input {
-  border: 1px solid pink; /* Input borders pink */
-  background-color: black; /* Input background black */
-  color: white; /* Input text white */
+.social-links a {
+  margin: 0 10px;
+  color: #ffffff;
+  font-size: 24px;
 }
 
-h1,
-h2,
-h3 {
-  color: pink; /* Headings in pink */
-}
-
-hr {
-  border-color: pink; /* Horizontal rules in pink */
+.social-links a:hover {
+  color: #e91e63;
 }

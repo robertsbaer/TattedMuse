@@ -1,0 +1,86 @@
+/* Container for each artist */
+.artist-card {
+  background-color: #1a1a1a; /* Dark background for the card */
+  color: #fff; /* White text */
+  border-radius: 10px; /* Rounded corners for the card */
+  border-color: #e91e63;
+  border-width: 2px;
+  overflow: hidden;
+  margin: 20px auto;
+  width: 90%;
+  max-width: 400px; /* Max width of the card */
+  box-shadow: 0px 0px 10px #000; /* Subtle shadow */
+}
+
+/* Profile image */
+.profile-img {
+  width: 100%; /* Full width of the card */
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  object-fit: cover;
+}
+
+/* Artist name and location */
+.artist-info {
+  text-align: center;
+  padding: 10px;
+}
+
+.artist-name {
+  font-size: 24px; /* Larger text for visibility */
+  color: #fff; /* White text */
+}
+
+.artist-location {
+  font-size: 18px;
+  color: #ccc; /* Lighter grey text for contrast */
+}
+
+/* Tattoo style tags */
+.style-tags {
+  display: flex;
+  justify-content: center; /* Center tags horizontally */
+  padding: 10px;
+  gap: 10px; /* Spacing between tags */
+}
+
+.style-tag {
+  background-color: #e91e63; /* Pink background for tags */
+  color: #fff; /* White text */
+  border-radius: 15px; /* Rounded borders for the tags */
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+/* Image gallery */
+.image-gallery {
+  display: flex;
+  overflow-x: auto; /* Allow horizontal scrolling */
+  padding: 10px;
+  align-items: center; /* Align images vertically */
+}
+
+.image-gallery img {
+  height: 100px; /* Fixed height for images */
+  margin-right: 10px; /* Space between images */
+  border-radius: 10px; /* Rounded corners for images */
+}
+
+.image-gallery img:last-child {
+  margin-right: 0;
+}
+
+/* View Portfolio button */
+.view-portfolio {
+  background-color: #e91e63; /* Pink background */
+  color: #fff; /* White text */
+  text-align: center;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  display: block; /* Make it a block to fill the width */
+  width: 100%;
+  cursor: pointer;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
