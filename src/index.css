@@ -25,5 +25,5 @@ body {
 
 /* Hide scrollbars for Firefox */
 body {
-  scrollbar-width: none; /* Hide scrollbar in Firefox */
+  scrollbar-width: thin;
 }

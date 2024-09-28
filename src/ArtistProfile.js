@@ -1,4 +1,3 @@
-// src/ArtistProfile.js
 import React from "react";
 import styled from "styled-components";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
@@ -80,6 +79,24 @@ const Gallery = styled.div`
   }
 `;
 
+const StylesContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+`;
+
+const StyleTag = styled.span`
+  background-color: #e91e63;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1em;
+  margin: 5px;
+  display: inline-block;
+  cursor: default;
+`;
+
 const WorkImage = styled.img`
   width: 150px;
   height: 150px;
@@ -98,7 +115,7 @@ const ArtistProfile = ({
   facebook,
   imageurl, // This must receive the updated imageurl
   work_images = [],
-  styles = [],
+  styles = [], // Make sure to reference the "styles" prop
 }) => {
   return (
     <ProfileContainer>
@@ -106,6 +123,15 @@ const ArtistProfile = ({
       {/* Display the updated profile image */}
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>
+      <StylesContainer>
+        {styles.length > 0 ? (
+          styles.map((style, index) => (
+            <StyleTag key={index}>{style.style}</StyleTag>
+          ))
+        ) : (
+          <p>No styles listed</p>
+        )}
+      </StylesContainer>
       <SocialLinks>
         {instagram && (
           <SocialIcon href={instagram} target="_blank">

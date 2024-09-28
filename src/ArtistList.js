@@ -29,12 +29,16 @@ const ArtistList = () => {
 
   const filteredArtists = data.tattoo_artists.filter((artist) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+    // Trim spaces only for styles
+    const trimmedSearchTerm = lowerCaseSearchTerm.trim();
+
     return (
-      artist.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      artist.styles.some((style) =>
-        style.style.toLowerCase().includes(lowerCaseSearchTerm)
-      ) ||
-      artist.location.toLowerCase().includes(lowerCaseSearchTerm)
+      artist.name.toLowerCase().includes(lowerCaseSearchTerm) || // Do not trim for name
+      artist.location.toLowerCase().includes(lowerCaseSearchTerm) || // Do not trim for city
+      artist.styles.some(
+        (style) => style.style.toLowerCase().includes(trimmedSearchTerm) // Trim for styles
+      )
     );
   });
 

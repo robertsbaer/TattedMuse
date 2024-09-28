@@ -1,0 +1,39 @@
+/* Style for the upload success message */
+.upload-success {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s ease-in-out;
+  color: green;
+  font-size: 1.5em;
+  text-align: center; /* Center the text */
+  position: relative; /* Keeps it positioned without affecting the layout */
+}
+
+.success-icon {
+  margin-right: 10px;
+  color: green;
+  font-size: 2em;
+  animation: popIn 0.3s ease-in-out;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Pop-in animation for the checkmark */
+@keyframes popIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}

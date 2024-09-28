@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSignUpEmailPassword, useAuthenticationStatus } from "@nhost/react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 
 const FormContainer = styled.div`
   max-width: 600px;
@@ -100,8 +101,32 @@ const SignupPage = () => {
     }
   };
 
+  const BackButton = styled.button`
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #e91e63;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #ff4081;
+    }
+  `;
+
   return (
     <FormContainer>
+      <BackButton onClick={() => navigate("/")}>
+        <FaArrowLeft />
+      </BackButton>
       <h2 style={{ color: "#fff" }}>Sign Up</h2>
       <form
         onSubmit={(e) => {

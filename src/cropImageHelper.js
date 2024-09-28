@@ -1,4 +1,3 @@
-// cropImageHelper.js
 export const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image();
@@ -13,9 +12,13 @@ export const getCroppedImg = async (imageSrc, pixelCrop) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
+  // Set canvas size to 300x300
+  const desiredWidth = 300;
+  const desiredHeight = 300;
+  canvas.width = desiredWidth;
+  canvas.height = desiredHeight;
 
+  // Draw the cropped image onto the canvas and resize it to 300x300
   ctx.drawImage(
     image,
     pixelCrop.x,
@@ -24,13 +27,14 @@ export const getCroppedImg = async (imageSrc, pixelCrop) => {
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    desiredWidth,
+    desiredHeight
   );
 
+  // Return the resized image as a blob
   return new Promise((resolve, reject) => {
-    canvas.toBlob((file) => {
-      resolve(file);
+    canvas.toBlob((blob) => {
+      resolve(blob);
     }, "image/jpeg");
   });
 };

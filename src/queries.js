@@ -69,6 +69,10 @@ export const GET_TATTOO_ARTIST_BY_USER_ID = gql`
       twitter
       location
       imageurl
+      styles {
+        id
+        style
+      }
     }
   }
 `;
@@ -139,6 +143,27 @@ export const CREATE_TATTOO_ARTIST = gql`
     ) {
       id
       name
+    }
+  }
+`;
+
+export const GET_ALL_TATTOO_STYLES = gql`
+  query GetAllTattooStyles {
+    styles {
+      id
+      style
+    }
+  }
+`;
+
+export const ADD_NEW_TATTOO_STYLE = gql`
+  mutation AddNewTattooStyle($style: String!, $tattoo_artist_id: uuid!) {
+    insert_styles_one(
+      object: { style: $style, tattoo_artist_id: $tattoo_artist_id }
+    ) {
+      id
+      style
+      tattoo_artist_id
     }
   }
 `;

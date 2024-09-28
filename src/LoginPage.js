@@ -104,7 +104,7 @@ const LoginPage = () => {
 
   return (
     <LoginContainer>
-      <BackButton onClick={() => navigate(-1)}>
+      <BackButton onClick={() => navigate("/")}>
         <FaArrowLeft />
       </BackButton>
       <h1>Login</h1>

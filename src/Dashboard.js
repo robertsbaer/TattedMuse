@@ -2,12 +2,15 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useUserData, useSignOut } from "@nhost/react";
 import { useMutation, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa"; // Import the back arrow icon
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "./cropImageHelper"; // Fix the import
 import {
   GET_TATTOO_ARTIST_BY_USER_ID,
   UPDATE_TATTOO_ARTIST,
   CREATE_TATTOO_ARTIST,
+  GET_ALL_TATTOO_STYLES,
+  ADD_NEW_TATTOO_STYLE,
 } from "./queries";
 import ImageUploader from "./ImageUploader";
 import nhost from "./nhost"; // Import nhost for file upload
@@ -18,6 +21,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState(null); // New state for profile image
   const [croppedImage, setCroppedImage] = useState(null);
+  const [newStyle, setNewStyle] = useState(""); // Add this state for handling new styles
   const [artistData, setArtistData] = useState({
     name: "",
     address: "",
@@ -25,16 +29,20 @@ function Dashboard() {
     instagram: "",
     twitter: "",
     location: "",
-    imageurl: "", // Still used to display uploaded profile image URL
+    imageurl: "",
+    styles: [],
   });
 
   const { data, loading, error, refetch } = useQuery(
     GET_TATTOO_ARTIST_BY_USER_ID,
     {
-      variables: { user_id: user.id },
+      variables: { user_id: user?.id }, // Add a safe check for user id
+      skip: !user, // Skip the query if the user is not logged in
     }
   );
 
+  const { data: stylesData } = useQuery(GET_ALL_TATTOO_STYLES);
+  const [addNewStyle] = useMutation(ADD_NEW_TATTOO_STYLE);
   const [updateArtist] = useMutation(UPDATE_TATTOO_ARTIST);
   const [createArtist] = useMutation(CREATE_TATTOO_ARTIST);
   const { signOut } = useSignOut();
@@ -56,7 +64,7 @@ function Dashboard() {
   };
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+    setCroppedAreaPixels(croppedAreaPixels); // Set the cropped area
   }, []);
 
   const handleCropConfirm = async () => {
@@ -122,37 +130,74 @@ function Dashboard() {
   };
 
   const handleSave = async () => {
-    if (data && data.tattoo_artists.length > 0) {
-      // Update existing profile
-      await updateArtist({
-        variables: {
-          id: artistData.id,
-          name: artistData.name,
-          address: artistData.address,
-          facebook: artistData.facebook,
-          instagram: artistData.instagram,
-          twitter: artistData.twitter,
-          location: artistData.location,
-          imageurl: artistData.imageurl,
-        },
-      });
-    } else {
-      // Create new profile
-      await createArtist({
-        variables: {
-          user_id: user.id,
-          name: artistData.name,
-          address: artistData.address,
-          facebook: artistData.facebook,
-          instagram: artistData.instagram,
-          twitter: artistData.twitter,
-          location: artistData.location,
-          imageurl: artistData.imageurl,
-        },
-      });
+    try {
+      if (newStyle.trim()) {
+        // Split the new styles by comma and loop over each style
+        const stylesArray = newStyle.split(",").map((style) => style.trim());
+
+        for (let style of stylesArray) {
+          if (style) {
+            // Save each style before saving the artist profile
+            const { data: styleData } = await addNewStyle({
+              variables: {
+                style: style,
+                tattoo_artist_id: artistData.id,
+              },
+            });
+            if (styleData) {
+              setArtistData((prevData) => ({
+                ...prevData,
+                styles: [
+                  ...(prevData.styles || []),
+                  styleData.insert_styles_one,
+                ],
+              }));
+            }
+          }
+        }
+
+        // Clear the newStyle input field
+        setNewStyle("");
+      }
+
+      // Check if we are updating an existing profile or creating a new one
+      if (data && data.tattoo_artists.length > 0) {
+        // Update existing profile
+        await updateArtist({
+          variables: {
+            id: artistData.id,
+            name: artistData.name,
+            address: artistData.address,
+            facebook: artistData.facebook,
+            instagram: artistData.instagram,
+            twitter: artistData.twitter,
+            location: artistData.location,
+            imageurl: artistData.imageurl,
+          },
+        });
+      } else {
+        // Create new profile
+        await createArtist({
+          variables: {
+            user_id: user.id,
+            name: artistData.name,
+            address: artistData.address,
+            facebook: artistData.facebook,
+            instagram: artistData.instagram,
+            twitter: artistData.twitter,
+            location: artistData.location,
+            imageurl: artistData.imageurl,
+          },
+        });
+      }
+
+      // Refetch the artist data after save
       await refetch();
+
+      alert("Profile and styles saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile or styles:", error);
     }
-    alert("Profile saved successfully!");
   };
 
   const handleSignOut = async () => {
@@ -160,26 +205,96 @@ function Dashboard() {
     navigate("/login"); // Redirect to login page after sign-out
   };
 
+  const handleStyleSelection = (style) => {
+    setArtistData((prevData) => {
+      const alreadySelected = prevData.styles.find((s) => s.id === style.id);
+      if (alreadySelected) {
+        // Remove style if already selected
+        return {
+          ...prevData,
+          styles: prevData.styles.filter((s) => s.id !== style.id),
+        };
+      } else {
+        // Add style if not selected
+        return {
+          ...prevData,
+          styles: [...prevData.styles, style],
+        };
+      }
+    });
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading dashboard: {error.message}</p>;
+  if (!user) {
+    return null; // Return null or redirect if the user is not signed in
+  }
 
   const isProfileExist = data && data.tattoo_artists.length > 0;
 
   return (
     <div className="dashboard-container">
+      <button className="back-button" onClick={() => navigate("/")}>
+        <FaArrowLeft />
+      </button>
       <h2>Dashboard</h2>
       <h3>{isProfileExist ? "Update Profile" : "Create Profile"}</h3>
 
       {/* Profile Image Upload */}
-      <h3>Profile Photo</h3>
-      <input type="file" onChange={handleProfileImageChange} accept="image/*" />
-      {croppedImage && (
-        <img src={URL.createObjectURL(croppedImage)} alt="Cropped" />
+      {artistData.imageurl && (
+        <div className="profile-image-container">
+          <img
+            src={artistData.imageurl}
+            alt="Current Profile"
+            className="profile-image"
+          />
+        </div>
       )}
-      <button onClick={handleProfileImageUpload} disabled={!croppedImage}>
-        Upload Profile Image
-      </button>
+      <div className="custom-file-upload">
+        <label htmlFor="profileImageUpload" className="file-upload-label">
+          Change Profile Image
+        </label>
+        <input
+          type="file"
+          id="profileImageUpload"
+          onChange={handleProfileImageChange}
+          accept="image/*"
+          className="file-input"
+        />
+      </div>
+      {croppedImage && (
+        <>
+          <img src={URL.createObjectURL(croppedImage)} alt="Cropped" />
+          <button onClick={handleProfileImageUpload}>
+            Upload Profile Image
+          </button>
+        </>
+      )}
 
+      {/* Styles Section */}
+      <h3>Styles you specialize in</h3>
+      {artistData.styles && artistData.styles.length > 0 ? (
+        <div className="style-list">
+          {artistData.styles.map((style) => (
+            <div key={style.id} className="style-item">
+              <p>{style.style}</p> {/* Display the style name */}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>
+          No styles selected yet
+        </p> /* Display a message if no styles are selected */
+      )}
+
+      <h3>Tattoo style</h3>
+      <input
+        type="text"
+        value={newStyle}
+        onChange={(e) => setNewStyle(e.target.value)}
+        placeholder="Your styles (separate by comma)"
+      />
+      {/* Form for other profile fields */}
       <input
         type="text"
         name="name"
@@ -192,14 +307,14 @@ function Dashboard() {
         name="address"
         value={artistData.address}
         onChange={handleChange}
-        placeholder="Address"
+        placeholder="Work Address"
       />
       <input
         type="text"
         name="location"
         value={artistData.location}
         onChange={handleChange}
-        placeholder="Location"
+        placeholder="City or town"
       />
       <input
         type="text"
@@ -239,15 +354,19 @@ function Dashboard() {
       {/* Image Cropper Modal */}
       {showCropModal && (
         <div className="cropper-modal">
-          <Cropper
-            image={profileImage}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
+          {/* Cropper with constrained height */}
+          <div className="cropper-wrapper">
+            <Cropper
+              image={profileImage}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+          {/* Buttons for confirming or canceling the crop */}
           <div className="cropper-controls">
             <button onClick={handleCropConfirm}>Confirm Crop</button>
             <button onClick={() => setShowCropModal(false)}>Cancel</button>

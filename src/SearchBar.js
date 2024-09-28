@@ -38,7 +38,7 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => {
         type="text"
         placeholder="Search by name, style, or city"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={(e) => setSearchTerm(e.target.value)} // Trim spaces
       />
     </SearchContainer>
   );
