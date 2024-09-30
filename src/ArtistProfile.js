@@ -123,6 +123,7 @@ const ArtistProfile = ({
       {/* Display the updated profile image */}
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>
+      <h3>Styles</h3>
       <StylesContainer>
         {styles.length > 0 ? (
           styles.map((style, index) => (

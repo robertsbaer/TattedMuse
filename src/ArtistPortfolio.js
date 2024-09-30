@@ -36,24 +36,39 @@ const BackButton = styled.button`
 
 const ArtistDetails = styled.div`
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 40px; /* Increase margin to give space around the section */
+  padding: 20px;
+  background-color: #1e1e1e; /* Subtle background color */
+  border-radius: 10px; /* Rounded corners for a softer look */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
 `;
 
 const ArtistName = styled.h1`
-  font-size: 2.5em;
+  font-size: 3em; /* Make the artist's name larger */
   margin-bottom: 10px;
+  color: #ffffff;
+  font-weight: bold;
+`;
+
+const ArtistProfileImage = styled.img`
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin: 15px 0;
+  object-fit: cover;
+  border: 3px solid #e91e63; /* Match the theme color */
 `;
 
 const ArtistLocation = styled.p`
-  font-size: 1.2em;
-  color: #b0bec5;
+  font-size: 1.5em; /* Make the location slightly larger */
+  color: #e91e63; /* Accent color for location */
   margin-bottom: 5px;
 `;
 
 const ArtistAddress = styled.p`
-  font-size: 1em;
-  color: #b0bec5;
-  margin-bottom: 20px;
+  font-size: 1.2em; /* Smaller for less important details */
+  color: #b0bec5; /* Subtle color for the address */
+  margin-bottom: 10px;
 `;
 
 const StylesContainer = styled.div`
@@ -76,21 +91,22 @@ const StyleTag = styled.span`
 `;
 
 const Gallery = styled.div`
-  column-count: 2;
-  column-gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  padding: 20px;
 
-  @media (max-width: 768px) {
-    column-count: 2;
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(1, 1fr);
   }
 `;
 
 const WorkImageWrapper = styled.div`
-  break-inside: avoid;
-  margin-bottom: 15px;
-  cursor: pointer; /* Add cursor to indicate image is clickable */
+  cursor: pointer;
 `;
 
 const WorkImage = styled.img`
+  max-width: 300px; /* Add a maximum width */
   width: 100%;
   height: auto;
   object-fit: cover;
@@ -163,18 +179,23 @@ const ArtistPortfolio = () => {
 
       <ArtistDetails>
         <ArtistName>{artist.name}</ArtistName>
+        {/* Artist Profile Image */}
+        <ArtistProfileImage
+          src={artist.imageurl}
+          alt={`${artist.name}'s profile`}
+        />
         <ArtistLocation>{artist.location}</ArtistLocation>
         <ArtistAddress>{artist.address}</ArtistAddress>
       </ArtistDetails>
 
-      <h3>Tattoo Styles</h3>
+      <h3 style={{ textAlign: "center" }}>Tattoo Styles</h3>
       <StylesContainer>
         {artist.styles.map((style, index) => (
           <StyleTag key={index}>{style.style}</StyleTag>
         ))}
       </StylesContainer>
 
-      <h3>Portfolio</h3>
+      <h3 style={{ textAlign: "center" }}>Portfolio</h3>
       <Gallery>
         {artist.work_images.map((image, index) => (
           <WorkImageWrapper

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import ArtistProfile from "./ArtistProfile";
 import SearchBar from "./SearchBar";
 import { useQuery } from "@apollo/client";
-import { GET_ARTISTS } from "./queries";
+import { GET_FILTERED_ARTISTS } from "./queries"; // Updated query
 
 const PageContainer = styled.div`
   display: flex;
@@ -20,27 +20,39 @@ const ListContainer = styled.div`
   padding-top: 90px;
 `;
 
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+`;
+
+const Button = styled.button`
+  padding: 10px;
+  margin: 0 10px;
+  background-color: #e91e63;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const ArtistList = () => {
-  const { loading, error, data } = useQuery(GET_ARTISTS);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0); // New state for pagination
+  const limit = 10; // Number of artists per page
+
+  const { loading, error, data } = useQuery(GET_FILTERED_ARTISTS, {
+    variables: { searchTerm: `%${searchTerm}%`, limit, offset: page * limit }, // Pass pagination and search term
+  });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading artists.</p>;
 
-  const filteredArtists = data.tattoo_artists.filter((artist) => {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-
-    // Trim spaces only for styles
-    const trimmedSearchTerm = lowerCaseSearchTerm.trim();
-
-    return (
-      artist.name.toLowerCase().includes(lowerCaseSearchTerm) || // Do not trim for name
-      artist.location.toLowerCase().includes(lowerCaseSearchTerm) || // Do not trim for city
-      artist.styles.some(
-        (style) => style.style.toLowerCase().includes(trimmedSearchTerm) // Trim for styles
-      )
-    );
-  });
+  const filteredArtists = data.tattoo_artists;
 
   return (
     <PageContainer>
@@ -54,6 +66,17 @@ const ArtistList = () => {
           <p>No artists found matching your search.</p>
         )}
       </ListContainer>
+      <Pagination>
+        <Button onClick={() => setPage(page - 1)} disabled={page === 0}>
+          Previous
+        </Button>
+        <Button
+          onClick={() => setPage(page + 1)}
+          disabled={filteredArtists.length < limit}
+        >
+          Next
+        </Button>
+      </Pagination>
     </PageContainer>
   );
 };
