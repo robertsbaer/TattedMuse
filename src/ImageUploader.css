@@ -18,6 +18,34 @@
   animation: popIn 0.3s ease-in-out;
 }
 
+/* Spinner styling */
+.upload-loading {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s ease-in-out;
+  color: #e91e63;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.spinner-icon {
+  margin-right: 10px;
+  font-size: 2em;
+  animation: spin 1s linear infinite;
+}
+
+/* Spin animation for spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Fade-in animation */
 @keyframes fadeIn {
   from {

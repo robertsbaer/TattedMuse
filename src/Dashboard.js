@@ -2,9 +2,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useUserData, useSignOut } from "@nhost/react";
 import { useMutation, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa"; // Import the back arrow icon
 import Cropper from "react-easy-crop";
-import { getCroppedImg } from "./cropImageHelper";
+import { getCroppedImg } from "./cropImageHelper"; // Fix the import
 import {
   GET_TATTOO_ARTIST_BY_USER_ID,
   UPDATE_TATTOO_ARTIST,
@@ -14,12 +14,12 @@ import {
   CREATE_INVITE_CODE,
 } from "./queries";
 import ImageUploader from "./ImageUploader";
-import nhost from "./nhost";
-import styled from "styled-components";
-import "./dashboard.css";
+import nhost from "./nhost"; // Import nhost for file upload
+import styled from "styled-components"; // Styled components
+import "./dashboard.css"; // Import the dashboard styles
 import { v4 as uuidv4 } from "uuid";
 
-// Styled components for the invite code section
+// Styled components for invite code section
 const InviteContainer = styled.div`
   background-color: #2c2c2c;
   padding: 20px;
@@ -64,50 +64,12 @@ const CopySuccessMessage = styled.p`
   margin-top: 10px;
 `;
 
-// Function to copy text to clipboard
-const copyToClipboard = (text, setCopied) => {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    // If the Clipboard API is supported, use it
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-      })
-      .catch((err) => {
-        console.error("Error copying to clipboard: ", err);
-      });
-  } else {
-    // Fallback for browsers that do not support the Clipboard API
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-
-    // Make the textarea invisible
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    document.body.appendChild(textArea);
-
-    // Select the text and copy it
-    textArea.select();
-    try {
-      document.execCommand("copy");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-    } catch (err) {
-      console.error("Fallback: Error copying to clipboard", err);
-    }
-
-    // Remove the textarea element after copying
-    document.body.removeChild(textArea);
-  }
-};
-
 function Dashboard() {
   const user = useUserData();
   const navigate = useNavigate();
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null); // New state for profile image
   const [croppedImage, setCroppedImage] = useState(null);
-  const [newStyle, setNewStyle] = useState("");
+  const [newStyle, setNewStyle] = useState(""); // Add this state for handling new styles
   const [inviteCode, setInviteCode] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -125,8 +87,8 @@ function Dashboard() {
   const { data, loading, error, refetch } = useQuery(
     GET_TATTOO_ARTIST_BY_USER_ID,
     {
-      variables: { user_id: user?.id },
-      skip: !user,
+      variables: { user_id: user?.id }, // Add a safe check for user id
+      skip: !user, // Skip the query if the user is not logged in
     }
   );
 
@@ -137,6 +99,11 @@ function Dashboard() {
   const [createInviteCode] = useMutation(CREATE_INVITE_CODE);
   const { signOut } = useSignOut();
 
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false); // Control crop modal visibility
+
   useEffect(() => {
     if (data && data.tattoo_artists.length > 0) {
       setArtistData(data.tattoo_artists[0]);
@@ -144,19 +111,19 @@ function Dashboard() {
   }, [data]);
 
   const handleProfileImageChange = (e) => {
-    setProfileImage(URL.createObjectURL(e.target.files[0]));
-    setShowCropModal(true);
+    setProfileImage(URL.createObjectURL(e.target.files[0])); // Preview the image
+    setShowCropModal(true); // Show the cropping modal
   };
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+    setCroppedAreaPixels(croppedAreaPixels); // Set the cropped area
   }, []);
 
   const handleCropConfirm = async () => {
     try {
-      const croppedImg = await getCroppedImg(profileImage, croppedAreaPixels);
-      setCroppedImage(croppedImg);
-      setShowCropModal(false);
+      const croppedImg = await getCroppedImg(profileImage, croppedAreaPixels); // Crop the image
+      setCroppedImage(croppedImg); // Store the cropped image
+      setShowCropModal(false); // Hide the cropping modal
     } catch (e) {
       console.error(e);
     }
@@ -165,10 +132,12 @@ function Dashboard() {
   const handleProfileImageUpload = async () => {
     if (!croppedImage) return;
 
+    // Convert the cropped image blob into a file
     const file = new File([croppedImage], "profile-image.jpg", {
       type: "image/jpeg",
     });
 
+    // Upload the profile image
     const { fileMetadata, error } = await nhost.storage.upload({
       file,
     });
@@ -179,9 +148,13 @@ function Dashboard() {
       return;
     }
 
+    // Get the public URL for the uploaded profile image
     const imageUrl = nhost.storage.getPublicUrl({ fileId: fileMetadata.id });
+
+    // Update artistData with the new profile image URL
     setArtistData({ ...artistData, imageurl: imageUrl });
 
+    // Update the artist's profile in the database
     await updateArtist({
       variables: {
         id: artistData.id,
@@ -191,11 +164,13 @@ function Dashboard() {
         instagram: artistData.instagram,
         twitter: artistData.twitter,
         location: artistData.location,
-        imageurl: imageUrl,
+        imageurl: imageUrl, // Save the new image URL
       },
     });
 
+    // Refetch artist data to update the UI
     await refetch();
+
     alert("Profile image uploaded successfully!");
   };
 
@@ -206,16 +181,15 @@ function Dashboard() {
     });
   };
 
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null); // State for cropped area
-
   const handleSave = async () => {
     try {
       if (newStyle.trim()) {
+        // Split the new styles by comma and loop over each style
         const stylesArray = newStyle.split(",").map((style) => style.trim());
 
         for (let style of stylesArray) {
           if (style) {
+            // Save each style before saving the artist profile
             const { data: styleData } = await addNewStyle({
               variables: {
                 style: style,
@@ -233,10 +207,14 @@ function Dashboard() {
             }
           }
         }
+
+        // Clear the newStyle input field
         setNewStyle("");
       }
 
+      // Check if we are updating an existing profile or creating a new one
       if (data && data.tattoo_artists.length > 0) {
+        // Update existing profile
         await updateArtist({
           variables: {
             id: artistData.id,
@@ -250,6 +228,7 @@ function Dashboard() {
           },
         });
       } else {
+        // Create new profile
         await createArtist({
           variables: {
             user_id: user.id,
@@ -264,7 +243,9 @@ function Dashboard() {
         });
       }
 
+      // Refetch the artist data after save
       await refetch();
+
       alert("Profile and styles saved successfully!");
     } catch (error) {
       console.error("Error saving profile or styles:", error);
@@ -273,11 +254,11 @@ function Dashboard() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login");
+    navigate("/login"); // Redirect to login page after sign-out
   };
 
   const handleGenerateCode = async () => {
-    const newCode = uuidv4();
+    const newCode = uuidv4(); // Generate a new UUID using uuidv4
 
     try {
       const { data } = await createInviteCode({
@@ -299,10 +280,16 @@ function Dashboard() {
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading dashboard: {error.message}</p>;
   if (!user) {
-    return null;
+    return null; // Return null or redirect if the user is not signed in
   }
 
   const isProfileExist = data && data.tattoo_artists.length > 0;
@@ -315,6 +302,7 @@ function Dashboard() {
       <h2>Dashboard</h2>
       <h3>{isProfileExist ? "Update Profile" : "Create Profile"}</h3>
 
+      {/* Profile Image Upload */}
       {artistData.imageurl && (
         <div className="profile-image-container">
           <img
@@ -345,12 +333,34 @@ function Dashboard() {
         </>
       )}
 
+      {/* Image Cropper Modal */}
+      {showCropModal && (
+        <div className="cropper-modal">
+          <div className="cropper-wrapper">
+            <Cropper
+              image={profileImage}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+          <div className="cropper-controls">
+            <button onClick={handleCropConfirm}>Confirm Crop</button>
+            <button onClick={() => setShowCropModal(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Styles Section */}
       <h3>Styles you specialize in</h3>
       {artistData.styles && artistData.styles.length > 0 ? (
         <div className="style-list">
           {artistData.styles.map((style) => (
             <div key={style.id} className="style-item">
-              <p>{style.style}</p>
+              <p>{style.style}</p> {/* Display the style name */}
             </div>
           ))}
         </div>
@@ -433,7 +443,7 @@ function Dashboard() {
           >
             {inviteUrl}
           </InviteLink>
-          <CopyButton onClick={() => copyToClipboard(inviteUrl, setCopied)}>
+          <CopyButton onClick={() => copyToClipboard(inviteUrl)}>
             Copy URL
           </CopyButton>
           {copied && (
@@ -442,6 +452,7 @@ function Dashboard() {
         </InviteContainer>
       )}
 
+      {/* Sign Out Button */}
       <button className="signout-btn" onClick={handleSignOut}>
         Sign Out
       </button>

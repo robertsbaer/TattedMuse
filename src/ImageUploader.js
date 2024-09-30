@@ -2,26 +2,28 @@ import React, { useState, useEffect } from "react";
 import nhost from "./nhost";
 import { useMutation } from "@apollo/client";
 import { ADD_WORK_IMAGE } from "./queries";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaSpinner } from "react-icons/fa"; // Import spinner icon
 import "./ImageUploader.css"; // Ensure to add custom styles here
 
 function ImageUploader({ artistId }) {
   const [files, setFiles] = useState([]);
   const [addWorkImage] = useMutation(ADD_WORK_IMAGE);
-  const [uploadSuccess, setUploadSuccess] = useState(false); // State to track success
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploading, setUploading] = useState(false); // Track upload progress
 
   // Handle file selection
   const handleFileChange = (e) => {
-    setFiles(e.target.files); // Allows multiple file selections
-    setUploadSuccess(false); // Reset the success state on new selection
+    setFiles(e.target.files);
+    setUploadSuccess(false);
   };
 
   // Handle uploading multiple files
   const handleUpload = async () => {
     if (files.length === 0) return;
 
+    setUploading(true); // Set uploading state to true
+
     const uploadPromises = Array.from(files).map(async (file) => {
-      // Upload each file to the default bucket
       const { fileMetadata, error } = await nhost.storage.upload({
         file,
       });
@@ -32,10 +34,8 @@ function ImageUploader({ artistId }) {
         return null;
       }
 
-      // Get the public URL for the uploaded file
       const imageUrl = nhost.storage.getPublicUrl({ fileId: fileMetadata.id });
 
-      // Save the image URL to the database
       const { data, errors } = await addWorkImage({
         variables: {
           imageurl: imageUrl,
@@ -51,26 +51,24 @@ function ImageUploader({ artistId }) {
       return imageUrl;
     });
 
-    // Wait for all uploads to complete
     const results = await Promise.all(uploadPromises);
 
-    // Check for any upload failures
+    setUploading(false); // Set uploading state to false
+
     if (results.includes(null)) {
       alert("One or more images failed to upload.");
     } else {
-      setUploadSuccess(true); // Set the success state
+      setUploadSuccess(true);
       setFiles([]); // Clear files after upload
     }
   };
 
-  // Automatically hide success message after 4 seconds
   useEffect(() => {
     if (uploadSuccess) {
       const timer = setTimeout(() => {
-        setUploadSuccess(false); // Reset success state after 4 seconds
+        setUploadSuccess(false);
       }, 4000);
-
-      return () => clearTimeout(timer); // Clear the timeout if component unmounts
+      return () => clearTimeout(timer);
     }
   }, [uploadSuccess]);
 
@@ -88,7 +86,6 @@ function ImageUploader({ artistId }) {
         className="file-input"
       />
 
-      {/* Display the selected file names or count */}
       {files.length > 0 && (
         <>
           <div className="file-preview">
@@ -101,14 +98,24 @@ function ImageUploader({ artistId }) {
           </div>
 
           {/* Conditionally render the Upload Images button */}
-          <button onClick={handleUpload}>Upload Images</button>
+          <button onClick={handleUpload} disabled={uploading}>
+            {uploading ? "Uploading..." : "Upload Images"}
+          </button>
         </>
+      )}
+
+      {/* Show the loading spinner while uploading */}
+      {uploading && (
+        <div className="upload-loading">
+          <FaSpinner className="spinner-icon" />
+          <p>Uploading images...</p>
+        </div>
       )}
 
       {/* Display the success message if upload is successful */}
       {uploadSuccess && (
         <div className="upload-success">
-          <FaCheckCircle className="success-icon" /> {/* Check icon */}
+          <FaCheckCircle className="success-icon" />
           <p>Images uploaded successfully!</p>
         </div>
       )}
