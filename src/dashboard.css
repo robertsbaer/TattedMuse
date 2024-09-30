@@ -99,7 +99,7 @@
   height: 40px;
   padding: 0;
   margin: 0;
-  position: absolute;
+  position: fixed;
   top: 20px;
   left: 20px;
   background-color: #e91e63;

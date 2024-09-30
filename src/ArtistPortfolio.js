@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { useQuery } from "@apollo/client";
 import { FaArrowLeft } from "react-icons/fa";
 import { GET_ARTIST_BY_ID } from "./queries";
+import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 
 const PortfolioContainer = styled.div`
   background-color: #121212;
@@ -36,17 +37,17 @@ const BackButton = styled.button`
 
 const ArtistDetails = styled.div`
   text-align: center;
-  margin-bottom: 40px; /* Increase margin to give space around the section */
+  margin-bottom: 40px;
   padding: 20px;
-  background-color: #1e1e1e; /* Subtle background color */
-  border-radius: 10px; /* Rounded corners for a softer look */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
 const ArtistName = styled.h1`
-  font-size: 3em; /* Make the artist's name larger */
+  font-size: 2.5em;
   margin-bottom: 10px;
-  color: #ffffff;
+  color: #e91e63;
   font-weight: bold;
 `;
 
@@ -56,18 +57,18 @@ const ArtistProfileImage = styled.img`
   border-radius: 50%;
   margin: 15px 0;
   object-fit: cover;
-  border: 3px solid #e91e63; /* Match the theme color */
+  border: 3px solid #e91e63;
 `;
 
 const ArtistLocation = styled.p`
-  font-size: 1.5em; /* Make the location slightly larger */
-  color: #e91e63; /* Accent color for location */
+  font-size: 1.5em;
+  color: #e91e63;
   margin-bottom: 5px;
 `;
 
 const ArtistAddress = styled.p`
-  font-size: 1.2em; /* Smaller for less important details */
-  color: #b0bec5; /* Subtle color for the address */
+  font-size: 1.2em;
+  color: #b0bec5;
   margin-bottom: 10px;
 `;
 
@@ -91,23 +92,21 @@ const StyleTag = styled.span`
 `;
 
 const Gallery = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 5px;
+  column-count: 2; /* Create two columns */
+  column-gap: 5px; /* Gap between columns */
   padding: 20px;
-
-  @media (max-width: 480px) {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  max-width: 800px; /* Adjust the max-width as needed */
+  margin: 0 auto; /* Center the gallery */
 `;
 
 const WorkImageWrapper = styled.div`
   cursor: pointer;
+  break-inside: avoid; /* Prevent images from breaking across columns */
+  margin-bottom: 5px; /* Space between images */
 `;
 
 const WorkImage = styled.img`
-  max-width: 300px; /* Add a maximum width */
-  width: 100%;
+  width: 100%; /* Image fills the column width */
   height: auto;
   object-fit: cover;
   border-radius: 5px;
@@ -149,6 +148,18 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
+const SocialLinks = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 10px;
+`;
+
+const SocialIcon = styled.a`
+  color: #e91e63;
+  font-size: 2.5em;
+`;
+
 const ArtistPortfolio = () => {
   const { artistId } = useParams();
   const navigate = useNavigate();
@@ -156,7 +167,7 @@ const ArtistPortfolio = () => {
     variables: { id: artistId },
   });
 
-  const [fullScreenImage, setFullScreenImage] = useState(null); // State to manage full-screen image
+  const [fullScreenImage, setFullScreenImage] = useState(null);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading artist portfolio.</p>;
@@ -179,7 +190,6 @@ const ArtistPortfolio = () => {
 
       <ArtistDetails>
         <ArtistName>{artist.name}</ArtistName>
-        {/* Artist Profile Image */}
         <ArtistProfileImage
           src={artist.imageurl}
           alt={`${artist.name}'s profile`}
@@ -187,6 +197,25 @@ const ArtistPortfolio = () => {
         <ArtistLocation>{artist.location}</ArtistLocation>
         <ArtistAddress>{artist.address}</ArtistAddress>
       </ArtistDetails>
+
+      {/* Add the social media section here */}
+      <SocialLinks>
+        {artist.instagram && (
+          <SocialIcon href={artist.instagram} target="_blank">
+            <FaInstagram />
+          </SocialIcon>
+        )}
+        {artist.twitter && (
+          <SocialIcon href={artist.twitter} target="_blank">
+            <FaTwitter />
+          </SocialIcon>
+        )}
+        {artist.facebook && (
+          <SocialIcon href={artist.facebook} target="_blank">
+            <FaFacebook />
+          </SocialIcon>
+        )}
+      </SocialLinks>
 
       <h3 style={{ textAlign: "center" }}>Tattoo Styles</h3>
       <StylesContainer>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 
 const SearchContainer = styled.div`
-  width: 100%;
+  width: 90%;
   max-width: 600px;
   margin: 20px auto;
   display: flex;

@@ -37,10 +37,9 @@ const AppContainer = styled.div`
   background-color: #121212;
   color: #ffffff;
   min-height: 100vh;
-  min-width: 100vw;
+  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   font-family: "Arial", sans-serif;
 `;
 

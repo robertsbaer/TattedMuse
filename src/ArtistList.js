@@ -1,5 +1,4 @@
-// src/ArtistList.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import ArtistProfile from "./ArtistProfile";
 import SearchBar from "./SearchBar";
@@ -24,18 +23,23 @@ const Pagination = styled.div`
   display: flex;
   justify-content: center;
   margin: 20px 0;
+  margin-bottom: 40px; /* Added space below the buttons */
 `;
 
 const Button = styled.button`
-  padding: 10px;
-  margin: 0 10px;
+  padding: 20px;
+  margin: 0 20px;
   background-color: #e91e63;
+  border-radius: 5px;
   color: white;
   border: none;
   cursor: pointer;
+  font-size: 18px; /* Increased font size */
+  width: 150px; /* Fixed width to ensure buttons are the same size */
+  text-align: center;
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.7;
     cursor: not-allowed;
   }
 `;
@@ -48,6 +52,11 @@ const ArtistList = () => {
   const { loading, error, data } = useQuery(GET_FILTERED_ARTISTS, {
     variables: { searchTerm: `%${searchTerm}%`, limit, offset: page * limit }, // Pass pagination and search term
   });
+
+  // useEffect to handle scrolling to the top when the page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading artists.</p>;
@@ -67,11 +76,14 @@ const ArtistList = () => {
         )}
       </ListContainer>
       <Pagination>
-        <Button onClick={() => setPage(page - 1)} disabled={page === 0}>
+        <Button
+          onClick={() => setPage((prevPage) => prevPage - 1)}
+          disabled={page === 0}
+        >
           Previous
         </Button>
         <Button
-          onClick={() => setPage(page + 1)}
+          onClick={() => setPage((prevPage) => prevPage + 1)}
           disabled={filteredArtists.length < limit}
         >
           Next

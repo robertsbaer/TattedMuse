@@ -61,7 +61,7 @@ const ErrorMessage = styled.p`
 `;
 
 const BackButton = styled.button`
-  position: absolute;
+  position: fixed;
   top: 20px;
   left: 20px;
   background-color: #e91e63;
