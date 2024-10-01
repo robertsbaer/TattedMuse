@@ -15,6 +15,7 @@ import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
 import Header from "./Header";
 import styled from "styled-components";
+import AdInfo from "./AdInfo";
 
 // Initialize Nhost client with your subdomain and region
 const nhost = new NhostClient({
@@ -60,6 +61,7 @@ const App = () => {
                 path="/portfolio/:artistId"
                 element={<ArtistPortfolio />}
               />
+              <Route path="/ad-info" element={<AdInfo />} />
             </Routes>
           </Router>
         </AppContainer>

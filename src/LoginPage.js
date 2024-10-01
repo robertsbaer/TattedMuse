@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSignInEmailPassword } from "@nhost/react";
 import styled from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const LoginContainer = styled.div`
   display: flex;
@@ -128,6 +129,9 @@ const LoginPage = () => {
           {isLoading ? "Logging in..." : "Login"}
         </Button>
       </LoginForm>
+      <Link to="/ad-info">
+        <Button>Advertise With Us</Button>
+      </Link>
     </LoginContainer>
   );
 };

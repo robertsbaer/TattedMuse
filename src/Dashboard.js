@@ -1,3 +1,5 @@
+// Dashboard.js
+
 import React, { useEffect, useState, useCallback } from "react";
 import { useUserData, useSignOut } from "@nhost/react";
 import { useMutation, useQuery } from "@apollo/client";
@@ -11,7 +13,9 @@ import {
   CREATE_TATTOO_ARTIST,
   GET_ALL_TATTOO_STYLES,
   ADD_NEW_TATTOO_STYLE,
+  GET_ARTIST_INTERACTIONS,
   CREATE_INVITE_CODE,
+  INITIALIZE_INTERACTION_COUNTS,
 } from "./queries";
 import ImageUploader from "./ImageUploader";
 import nhost from "./nhost";
@@ -73,6 +77,10 @@ function Dashboard() {
   const [inviteCode, setInviteCode] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [initializeInteractionCounts] = useMutation(
+    INITIALIZE_INTERACTION_COUNTS
+  );
+
   const [artistData, setArtistData] = useState({
     id: null,
     name: "",
@@ -94,6 +102,20 @@ function Dashboard() {
     }
   );
 
+  const { data: interactionsData, loading: interactionsLoading } = useQuery(
+    GET_ARTIST_INTERACTIONS,
+    {
+      variables: { artist_id: artistData.id },
+      skip: !artistData.id,
+    }
+  );
+
+  useEffect(() => {
+    if (data && data.tattoo_artists.length > 0) {
+      setArtistData(data.tattoo_artists[0]);
+    }
+  }, [data]);
+
   const { data: stylesData } = useQuery(GET_ALL_TATTOO_STYLES);
   const [addNewStyle] = useMutation(ADD_NEW_TATTOO_STYLE);
   const [updateArtist] = useMutation(UPDATE_TATTOO_ARTIST);
@@ -105,12 +127,6 @@ function Dashboard() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
-
-  useEffect(() => {
-    if (data && data.tattoo_artists.length > 0) {
-      setArtistData(data.tattoo_artists[0]);
-    }
-  }, [data]);
 
   const handleProfileImageChange = (e) => {
     setProfileImage(URL.createObjectURL(e.target.files[0]));
@@ -168,7 +184,7 @@ function Dashboard() {
 
     await refetch();
 
-    alert("Profile image uploaded successfully!");
+    // alert("Profile image uploaded successfully!");
   };
 
   const handleChange = (e) => {
@@ -184,7 +200,7 @@ function Dashboard() {
 
       const isProfileExist = data && data.tattoo_artists.length > 0;
 
-      // Check if we are updating an existing profile or creating a new one
+      // Step 1: Check if the artist profile exists
       if (isProfileExist) {
         // Update existing profile
         await updateArtist({
@@ -201,7 +217,7 @@ function Dashboard() {
           },
         });
       } else {
-        // Create new profile
+        // Step 2: Create a new artist profile
         const result = await createArtist({
           variables: {
             user_id: user.id,
@@ -216,25 +232,30 @@ function Dashboard() {
           },
         });
 
+        // Step 3: Capture the new artist's ID
         artistId = result.data.insert_tattoo_artists_one.id;
 
+        // Step 4: Update state with the new artist's ID
         setArtistData({
           ...artistData,
           id: artistId,
         });
+
+        // Step 5: Insert interaction counts for the new artist
+        await initializeInteractionCounts({
+          variables: {
+            artist_id: artistId, // Use the new artist's ID, not the user ID
+          },
+        });
       }
 
-      // Now that we have a valid artistId, proceed to add new styles
+      // Step 6: Add new styles if provided
       if (newStyle.trim()) {
         const stylesArray = newStyle.split(",").map((style) => style.trim());
-
         for (let style of stylesArray) {
           if (style) {
             const { data: styleData } = await addNewStyle({
-              variables: {
-                style: style,
-                tattoo_artist_id: artistId,
-              },
+              variables: { style: style, tattoo_artist_id: artistId },
             });
             if (styleData) {
               setArtistData((prevData) => ({
@@ -247,15 +268,12 @@ function Dashboard() {
             }
           }
         }
-
-        // Clear the newStyle input field
-        setNewStyle("");
+        setNewStyle(""); // Clear the input field after saving
       }
 
-      // Refetch the artist data after save
+      // Refetch artist data after saving
       await refetch();
-
-      alert("Profile and styles saved successfully!");
+      // alert("Profile and styles saved successfully!");
     } catch (error) {
       console.error("Error saving profile or styles:", error);
     }
@@ -303,8 +321,28 @@ function Dashboard() {
 
   const isProfileExist = data && data.tattoo_artists.length > 0;
 
+  const portfolioViews =
+    interactionsData?.artist_interaction_counts_by_pk?.portfolio_views || 0;
+  const addressClicks =
+    interactionsData?.artist_interaction_counts_by_pk?.address_clicks || 0;
+
   return (
     <div className="dashboard-container">
+      <h3>Popularity Stats</h3>
+      {interactionsLoading ? (
+        <p>Loading interactions...</p>
+      ) : (
+        <div className="interaction-container">
+          <p className="interaction-stat">
+            <span className="stat-label">Portfolio Views:</span>
+            <span className="stat-value"> {portfolioViews}</span>
+          </p>
+          <p className="interaction-stat">
+            <span className="stat-label">Address Clicks:</span>
+            <span className="stat-value"> {addressClicks}</span>
+          </p>
+        </div>
+      )}
       <button className="back-button" onClick={() => navigate("/")}>
         <FaArrowLeft />
       </button>

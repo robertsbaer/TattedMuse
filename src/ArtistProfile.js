@@ -1,9 +1,20 @@
+// ArtistProfile.jsx
+
 import React from "react";
 import styled from "styled-components";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import SimpleBar from "simplebar-react";
+import "simplebar-react/dist/simplebar.min.css";
+import { useMutation, useQuery } from "@apollo/client";
+import {
+  INCREMENT_PORTFOLIO_VIEW,
+  GET_ARTIST_INTERACTIONS,
+  INITIALIZE_INTERACTION_COUNTS,
+} from "./queries";
 
 const ProfileContainer = styled.div`
+  width: 33%;
   background-color: #1e1e1e;
   padding: 20px;
   border-radius: 8px;
@@ -14,6 +25,10 @@ const ProfileContainer = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const ArtistImage = styled.img`
@@ -55,30 +70,6 @@ const PortfolioLink = styled(Link)`
   }
 `;
 
-const Gallery = styled.div`
-  display: flex;
-  overflow-x: auto; /* Enables horizontal scrolling */
-  gap: 10px;
-  padding: 10px 0;
-  width: 100%; /* Ensures the gallery fills the card width */
-  max-width: 500px; /* Ensures a limited display area for 3 images */
-  scroll-snap-type: x mandatory; /* Snap for smooth scrolling */
-  scrollbar-width: thin;
-  scrollbar-color: #e91e63 #1e1e1e; /* Customize scrollbar colors */
-
-  ::-webkit-scrollbar {
-    height: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #1e1e1e;
-  }
-  ::-webkit-scrollbar-thumb {
-    background-color: #e91e63;
-    border-radius: 10px;
-    border: 2px solid #1e1e1e;
-  }
-`;
-
 const StylesContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -102,8 +93,36 @@ const WorkImage = styled.img`
   height: 150px;
   object-fit: cover;
   border-radius: 5px;
-  flex-shrink: 0; /* Ensures the images stay the same size */
-  scroll-snap-align: start; /* Snap to image */
+  flex-shrink: 0;
+  scroll-snap-align: start;
+`;
+
+const StyledSimpleBar = styled(SimpleBar)`
+  .simplebar-track.simplebar-horizontal {
+    height: 8px;
+    background: #1e1e1e;
+  }
+
+  .simplebar-scrollbar::before {
+    background-color: #e91e63;
+    border-radius: 4px;
+  }
+
+  .simplebar-scrollbar.simplebar-visible::before {
+    opacity: 1;
+  }
+`;
+
+const ViewCount = styled.div`
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e91e63;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+  width: fit-content;
 `;
 
 const ArtistProfile = ({
@@ -114,16 +133,42 @@ const ArtistProfile = ({
   instagram,
   twitter,
   facebook,
-  imageurl, // This must receive the updated imageurl
+  imageurl,
   work_images = [],
-  styles = [], // Make sure to reference the "styles" prop
+  styles = [],
 }) => {
+  const [incrementPortfolioView] = useMutation(INCREMENT_PORTFOLIO_VIEW);
+  const [initializeInteractionCounts] = useMutation(
+    INITIALIZE_INTERACTION_COUNTS
+  );
+
+  const { data, loading, error } = useQuery(GET_ARTIST_INTERACTIONS, {
+    variables: { artist_id: id },
+    onCompleted: (data) => {
+      if (!data?.artist_interaction_counts_by_pk) {
+        initializeInteractionCounts({
+          variables: { artist_id: id },
+        });
+      }
+    },
+  });
+
+  if (loading) return <p>Loading interactions...</p>;
+  if (error) return <p>Error loading interactions...</p>;
+
+  const portfolioViews =
+    data?.artist_interaction_counts_by_pk?.portfolio_views || 0;
+
+  const handlePortfolioClick = () => {
+    incrementPortfolioView({
+      variables: { artist_id: id },
+    });
+  };
+
   return (
     <ProfileContainer>
-      <ArtistImage src={imageurl} alt={`${name}'s profile`} />{" "}
-      {/* Display the updated profile image */}
+      <ArtistImage src={imageurl} alt={`${name}'s profile`} />
       <ArtistName>{name}</ArtistName>
-      <ArtistName>{shop_name}</ArtistName>
       <p>{location}</p>
       <h3>Styles</h3>
       <StylesContainer>
@@ -137,31 +182,51 @@ const ArtistProfile = ({
       </StylesContainer>
       <SocialLinks>
         {instagram && (
-          <SocialIcon href={instagram} target="_blank">
+          <SocialIcon
+            href={instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <FaInstagram />
           </SocialIcon>
         )}
         {twitter && (
-          <SocialIcon href={twitter} target="_blank">
+          <SocialIcon href={twitter} target="_blank" rel="noopener noreferrer">
             <FaTwitter />
           </SocialIcon>
         )}
         {facebook && (
-          <SocialIcon href={facebook} target="_blank">
+          <SocialIcon href={facebook} target="_blank" rel="noopener noreferrer">
             <FaFacebook />
           </SocialIcon>
         )}
       </SocialLinks>
-      <Gallery>
-        {work_images.slice(0, 10).map((image, index) => (
-          <WorkImage
-            key={index}
-            src={image.imageurl}
-            alt={`Work ${index + 1}`}
-          />
-        ))}
-      </Gallery>
-      <PortfolioLink to={`/portfolio/${id}`}>View Portfolio</PortfolioLink>
+      <StyledSimpleBar
+        style={{ width: "100%", maxWidth: "500px", height: "180px" }}
+        forceVisible="x"
+        autoHide={false}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            padding: "10px 0",
+            scrollSnapType: "x mandatory",
+          }}
+        >
+          {work_images.slice(0, 10).map((image, index) => (
+            <WorkImage
+              key={index}
+              src={image.imageurl}
+              alt={`Work ${index + 1}`}
+            />
+          ))}
+        </div>
+      </StyledSimpleBar>
+      {/* <ViewCount>{`Portfolio Views: ${portfolioViews}`}</ViewCount> */}
+      <PortfolioLink to={`/portfolio/${id}`} onClick={handlePortfolioClick}>
+        View Portfolio
+      </PortfolioLink>
     </ProfileContainer>
   );
 };

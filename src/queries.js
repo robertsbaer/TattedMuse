@@ -143,7 +143,6 @@ export const UPDATE_TATTOO_ARTIST = gql`
   }
 `;
 
-// src/queries.js
 export const ADD_WORK_IMAGE = gql`
   mutation AddWorkImage($imageurl: String!, $tattoo_artist_id: uuid!) {
     insert_work_images_one(
@@ -237,6 +236,47 @@ export const CREATE_INVITE_CODE = gql`
       code
       used
       expiration_date
+    }
+  }
+`;
+
+export const GET_ARTIST_INTERACTIONS = gql`
+  query GetArtistInteractions($artist_id: uuid!) {
+    artist_interaction_counts_by_pk(artist_id: $artist_id) {
+      portfolio_views
+      address_clicks
+    }
+  }
+`;
+
+export const INCREMENT_PORTFOLIO_VIEW = gql`
+  mutation IncrementPortfolioView($artist_id: uuid!) {
+    update_artist_interaction_counts(
+      where: { artist_id: { _eq: $artist_id } }
+      _inc: { portfolio_views: 1 }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const INCREMENT_ADDRESS_CLICKS = gql`
+  mutation IncrementAddressClicks($artist_id: uuid!) {
+    update_artist_interaction_counts(
+      where: { artist_id: { _eq: $artist_id } }
+      _inc: { address_clicks: 1 }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+export const INITIALIZE_INTERACTION_COUNTS = gql`
+  mutation InitializeInteractionCounts($artist_id: uuid!) {
+    insert_artist_interaction_counts_one(
+      object: { artist_id: $artist_id, portfolio_views: 0, address_clicks: 0 }
+    ) {
+      artist_id
     }
   }
 `;

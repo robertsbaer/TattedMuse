@@ -266,3 +266,30 @@
   padding: 5px 10px;
   border-radius: 5px;
 }
+
+/* Styles for the interaction count section */
+.interaction-container {
+  background-color: #2c2c2c;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  color: #ffffff;
+}
+
+.interaction-stat {
+  font-size: 1.2em;
+  margin: 10px 0;
+  color: #e91e63;
+}
+
+.stat-label {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #ff4081;
+}

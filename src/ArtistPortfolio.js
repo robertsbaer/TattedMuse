@@ -1,10 +1,18 @@
+// ArtistPortfolio.js
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useQuery } from "@apollo/client";
 import { FaArrowLeft } from "react-icons/fa";
-import { GET_ARTIST_BY_ID } from "./queries";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
+import { useMutation } from "@apollo/client";
+import {
+  GET_ARTIST_BY_ID,
+  INCREMENT_ADDRESS_CLICKS,
+  INITIALIZE_INTERACTION_COUNTS,
+  GET_ARTIST_INTERACTIONS,
+} from "./queries";
 
 const PortfolioContainer = styled.div`
   background-color: #121212;
@@ -60,16 +68,30 @@ const ArtistProfileImage = styled.img`
   border: 3px solid #e91e63;
 `;
 
-const ArtistLocation = styled.p`
-  font-size: 1.5em;
-  color: #e91e63;
+const ArtistShopName = styled.p`
+  font-size: 1.3em;
+  color: #ffffff;
   margin-bottom: 5px;
 `;
 
-const ArtistAddress = styled.p`
+const ArtistLocation = styled.a`
+  font-size: 1.5em;
+  color: #e91e63;
+  margin-bottom: 5px;
+  display: block;
+  text-decoration: none;
+`;
+
+const ArtistAddress = styled.a`
   font-size: 1.2em;
   color: #b0bec5;
   margin-bottom: 10px;
+  display: block;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const StylesContainer = styled.div`
@@ -161,10 +183,33 @@ const SocialIcon = styled.a`
 `;
 
 const ArtistPortfolio = () => {
+  const [incrementAddressClicks] = useMutation(INCREMENT_ADDRESS_CLICKS);
+  const [initializeInteractionCounts] = useMutation(
+    INITIALIZE_INTERACTION_COUNTS
+  );
+
+  const handleAddressClick = () => {
+    incrementAddressClicks({
+      variables: { artist_id: artistId },
+    });
+  };
+
   const { artistId } = useParams();
   const navigate = useNavigate();
+
   const { loading, error, data } = useQuery(GET_ARTIST_BY_ID, {
     variables: { id: artistId },
+  });
+
+  const { data: interactionsData } = useQuery(GET_ARTIST_INTERACTIONS, {
+    variables: { artist_id: artistId },
+    onCompleted: (data) => {
+      if (!data?.artist_interaction_counts_by_pk) {
+        initializeInteractionCounts({
+          variables: { artist_id: artistId },
+        });
+      }
+    },
   });
 
   const [fullScreenImage, setFullScreenImage] = useState(null);
@@ -195,8 +240,17 @@ const ArtistPortfolio = () => {
           alt={`${artist.name}'s profile`}
         />
         <ArtistLocation>{artist.location}</ArtistLocation>
-        <ArtistAddress>{artist.shop_name}</ArtistAddress>
-        <ArtistAddress>{artist.address}</ArtistAddress>
+        <ArtistShopName>{artist.shop_name}</ArtistShopName>
+        <ArtistAddress
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            artist.address
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleAddressClick}
+        >
+          {artist.address}
+        </ArtistAddress>
       </ArtistDetails>
 
       {/* Add the social media section here */}
