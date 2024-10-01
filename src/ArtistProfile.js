@@ -110,6 +110,7 @@ const ArtistProfile = ({
   id,
   name,
   location,
+  shop_name,
   instagram,
   twitter,
   facebook,
@@ -122,6 +123,7 @@ const ArtistProfile = ({
       <ArtistImage src={imageurl} alt={`${name}'s profile`} />{" "}
       {/* Display the updated profile image */}
       <ArtistName>{name}</ArtistName>
+      <ArtistName>{shop_name}</ArtistName>
       <p>{location}</p>
       <h3>Styles</h3>
       <StylesContainer>

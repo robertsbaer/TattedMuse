@@ -7,6 +7,7 @@ export const GET_TATTOO_ARTISTS = gql`
       id
       name
       location
+      shop_name
       instagram
       twitter
       facebook
@@ -27,6 +28,7 @@ export const GET_ARTISTS = gql`
       id
       name
       location
+      shop_name
       address
       imageurl
       styles {
@@ -56,6 +58,7 @@ export const GET_FILTERED_ARTISTS = gql`
       id
       name
       location
+      shop_name
       address
       imageurl
       styles {
@@ -73,6 +76,7 @@ export const GET_ARTIST_BY_ID = gql`
     tattoo_artists_by_pk(id: $id) {
       name
       location
+      shop_name
       address
       imageurl
       instagram
@@ -98,6 +102,7 @@ export const GET_TATTOO_ARTIST_BY_USER_ID = gql`
       instagram
       twitter
       location
+      shop_name
       imageurl
       styles {
         id
@@ -116,6 +121,7 @@ export const UPDATE_TATTOO_ARTIST = gql`
     $instagram: String
     $twitter: String
     $location: String
+    $shop_name: String
     $imageurl: String
   ) {
     update_tattoo_artists_by_pk(
@@ -127,6 +133,7 @@ export const UPDATE_TATTOO_ARTIST = gql`
         instagram: $instagram
         twitter: $twitter
         location: $location
+        shop_name: $shop_name
         imageurl: $imageurl
       }
     ) {
@@ -157,6 +164,7 @@ export const CREATE_TATTOO_ARTIST = gql`
     $instagram: String
     $twitter: String
     $location: String
+    $shop_name: String
     $imageurl: String
   ) {
     insert_tattoo_artists_one(
@@ -168,6 +176,7 @@ export const CREATE_TATTOO_ARTIST = gql`
         instagram: $instagram
         twitter: $twitter
         location: $location
+        shop_name: $shop_name
         imageurl: $imageurl
       }
     ) {

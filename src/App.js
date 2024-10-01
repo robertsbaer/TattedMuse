@@ -18,8 +18,8 @@ import styled from "styled-components";
 
 // Initialize Nhost client with your subdomain and region
 const nhost = new NhostClient({
-  subdomain: "idfwcavlnilnvkccmzvp",
-  region: "us-east-1",
+  subdomain: process.env.REACT_APP_NHOST_SUBDOMAIN,
+  region: process.env.REACT_APP_NHOST_REGION,
 });
 
 // Create an HTTP link to your GraphQL endpoint

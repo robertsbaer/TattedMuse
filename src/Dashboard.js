@@ -81,6 +81,7 @@ function Dashboard() {
     instagram: "",
     twitter: "",
     location: "",
+    shop_name: "",
     imageurl: "",
     styles: [],
   });
@@ -160,6 +161,7 @@ function Dashboard() {
         instagram: artistData.instagram,
         twitter: artistData.twitter,
         location: artistData.location,
+        shop_name: artistData.shop_name,
         imageurl: imageUrl,
       },
     });
@@ -194,6 +196,7 @@ function Dashboard() {
             instagram: artistData.instagram,
             twitter: artistData.twitter,
             location: artistData.location,
+            shop_name: artistData.shop_name,
             imageurl: artistData.imageurl,
           },
         });
@@ -208,6 +211,7 @@ function Dashboard() {
             instagram: artistData.instagram,
             twitter: artistData.twitter,
             location: artistData.location,
+            shop_name: artistData.shop_name,
             imageurl: artistData.imageurl,
           },
         });
@@ -412,6 +416,13 @@ function Dashboard() {
         value={artistData.location}
         onChange={handleChange}
         placeholder="City or Town"
+      />
+      <input
+        type="text"
+        name="shop_name"
+        value={artistData.shop_name}
+        onChange={handleChange}
+        placeholder="Shop Name"
       />
       <input
         type="text"

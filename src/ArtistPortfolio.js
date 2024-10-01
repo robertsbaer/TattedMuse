@@ -195,6 +195,7 @@ const ArtistPortfolio = () => {
           alt={`${artist.name}'s profile`}
         />
         <ArtistLocation>{artist.location}</ArtistLocation>
+        <ArtistAddress>{artist.shop_name}</ArtistAddress>
         <ArtistAddress>{artist.address}</ArtistAddress>
       </ArtistDetails>
 
