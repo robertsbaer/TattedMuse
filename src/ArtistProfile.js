@@ -8,7 +8,7 @@ const ProfileContainer = styled.div`
   padding: 20px;
   border-radius: 8px;
   margin: 20px 0;
-  max-width: 80vw;
+  max-width: 90vw;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;

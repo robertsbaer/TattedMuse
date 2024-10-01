@@ -3,7 +3,7 @@ import styled from "styled-components";
 import ArtistProfile from "./ArtistProfile";
 import SearchBar from "./SearchBar";
 import { useQuery } from "@apollo/client";
-import { GET_FILTERED_ARTISTS } from "./queries"; // Updated query
+import { GET_FILTERED_ARTISTS } from "./queries"; // Ensure your query uses _ilike
 
 const PageContainer = styled.div`
   display: flex;
@@ -19,44 +19,32 @@ const ListContainer = styled.div`
   padding-top: 90px;
 `;
 
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-  margin-bottom: 40px; /* Added space below the buttons */
-`;
-
-const Button = styled.button`
-  padding: 20px;
-  margin: 0 20px;
-  background-color: #e91e63;
-  border-radius: 5px;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 18px; /* Increased font size */
-  width: 150px; /* Fixed width to ensure buttons are the same size */
-  text-align: center;
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-`;
-
 const ArtistList = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(0); // New state for pagination
-  const limit = 10; // Number of artists per page
+  const [page, setPage] = useState(0);
+  const limit = 10;
+
+  // Normalize the search term
+  const normalizedSearchTerm = searchTerm
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
 
   const { loading, error, data } = useQuery(GET_FILTERED_ARTISTS, {
-    variables: { searchTerm: `%${searchTerm}%`, limit, offset: page * limit }, // Pass pagination and search term
+    variables: {
+      searchTerm: `%${normalizedSearchTerm}%`,
+      limit,
+      offset: page * limit,
+    },
   });
 
-  // useEffect to handle scrolling to the top when the page changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
+
+  const resetPage = () => {
+    setPage(0); // Reset page when search is cleared
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading artists.</p>;
@@ -66,7 +54,11 @@ const ArtistList = () => {
   return (
     <PageContainer>
       <ListContainer>
-        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          resetPage={resetPage}
+        />
         {filteredArtists.length > 0 ? (
           filteredArtists.map((artist) => (
             <ArtistProfile key={artist.id} {...artist} />
@@ -75,20 +67,6 @@ const ArtistList = () => {
           <p>No artists found matching your search.</p>
         )}
       </ListContainer>
-      <Pagination>
-        <Button
-          onClick={() => setPage((prevPage) => prevPage - 1)}
-          disabled={page === 0}
-        >
-          Previous
-        </Button>
-        <Button
-          onClick={() => setPage((prevPage) => prevPage + 1)}
-          disabled={filteredArtists.length < limit}
-        >
-          Next
-        </Button>
-      </Pagination>
     </PageContainer>
   );
 };

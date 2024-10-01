@@ -8,9 +8,18 @@ import { Link } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
 // Original styles and components
+const SignupContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #121212;
+  color: #ffffff;
+`;
+
 const FormContainer = styled.div`
   max-width: 600px;
-  margin: 0 auto;
   padding: 20px;
   padding-right: 40px;
   padding-bottom: 40px;
@@ -156,75 +165,77 @@ const SignupPage = () => {
   };
 
   return (
-    <FormContainer>
-      <BackButton onClick={() => navigate("/")}>
-        <FaArrowLeft />
-      </BackButton>
-      <h2 style={{ color: "#fff" }}>Sign Up</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const email = e.target.email.value;
-          const password = e.target.password.value;
-          handleSignup(email, password, inviteCode);
-        }}
-      >
-        <FormField>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="Email"
-          />
-        </FormField>
-        <FormField>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            placeholder="Password"
-          />
-        </FormField>
-        <FormField>
-          <Label htmlFor="inviteCode">Invite Code</Label>
-          <Input
-            type="text"
-            id="inviteCode"
-            name="inviteCode"
-            value={inviteCode} // Autofill invite code from URL
-            onChange={(e) => setInviteCode(e.target.value)}
-            required
-            placeholder="Enter your invite code"
-          />
-        </FormField>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Signing up..." : "Sign Up"}
-        </Button>
-      </form>
-
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-
-      <div style={{ marginTop: "20px" }}>
-        <p style={{ color: "#fff" }}>Already have an account? </p>
-        <StyledLinkButton to="/login">Login here</StyledLinkButton>
-      </div>
-
-      {isAuthenticated && (
-        <div style={{ marginTop: "20px" }}>
-          <Button onClick={() => navigate("/dashboard")}>
-            Go to Dashboard
+    <SignupContainer>
+      <FormContainer>
+        <BackButton onClick={() => navigate("/")}>
+          <FaArrowLeft />
+        </BackButton>
+        <h2 style={{ color: "#fff" }}>Sign Up</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            handleSignup(email, password, inviteCode);
+          }}
+        >
+          <FormField>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Email"
+            />
+          </FormField>
+          <FormField>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Password"
+            />
+          </FormField>
+          <FormField>
+            <Label htmlFor="inviteCode">Invite Code</Label>
+            <Input
+              type="text"
+              id="inviteCode"
+              name="inviteCode"
+              value={inviteCode} // Autofill invite code from URL
+              onChange={(e) => setInviteCode(e.target.value)}
+              required
+              placeholder="Enter your invite code"
+            />
+          </FormField>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Signing up..." : "Sign Up"}
           </Button>
+        </form>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        <div style={{ marginTop: "20px" }}>
+          <p style={{ color: "#fff" }}>Already have an account? </p>
+          <StyledLinkButton to="/login">Login here</StyledLinkButton>
         </div>
-      )}
-    </FormContainer>
+
+        {isAuthenticated && (
+          <div style={{ marginTop: "20px" }}>
+            <Button onClick={() => navigate("/dashboard")}>
+              Go to Dashboard
+            </Button>
+          </div>
+        )}
+      </FormContainer>
+    </SignupContainer>
   );
 };
 

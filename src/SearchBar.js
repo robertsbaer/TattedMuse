@@ -48,15 +48,36 @@ const Button = styled.button`
   }
 `;
 
-const SearchBar = ({ searchTerm, setSearchTerm }) => {
+const ClearButton = styled.button`
+  padding: 10px 15px;
+  background-color: #ff4081;
+  color: white;
+  border: 1px solid #fff;
+  border-radius: 25px 25px; /* Rounded on the right */
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 1em;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
+const SearchBar = ({ searchTerm, setSearchTerm, resetPage }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
 
   const handleInputChange = (e) => {
-    setLocalSearchTerm(e.target.value); // Update input field immediately
+    setLocalSearchTerm(e.target.value);
   };
 
   const handleSearchClick = () => {
-    setSearchTerm(localSearchTerm); // Trigger search with the current input
+    setSearchTerm(localSearchTerm);
+  };
+
+  const handleClearClick = () => {
+    setLocalSearchTerm("");
+    setSearchTerm("");
+    resetPage(); // Resets the page when clearing the search
   };
 
   return (
@@ -70,6 +91,9 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => {
       <Button onClick={handleSearchClick} disabled={!localSearchTerm.trim()}>
         Search
       </Button>
+      {localSearchTerm && (
+        <ClearButton onClick={handleClearClick}>X</ClearButton>
+      )}
     </SearchContainer>
   );
 };

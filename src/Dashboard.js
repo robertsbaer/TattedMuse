@@ -2,9 +2,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useUserData, useSignOut } from "@nhost/react";
 import { useMutation, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa"; // Import the back arrow icon
+import { FaArrowLeft } from "react-icons/fa";
 import Cropper from "react-easy-crop";
-import { getCroppedImg } from "./cropImageHelper"; // Fix the import
+import { getCroppedImg } from "./cropImageHelper";
 import {
   GET_TATTOO_ARTIST_BY_USER_ID,
   UPDATE_TATTOO_ARTIST,
@@ -14,9 +14,9 @@ import {
   CREATE_INVITE_CODE,
 } from "./queries";
 import ImageUploader from "./ImageUploader";
-import nhost from "./nhost"; // Import nhost for file upload
-import styled from "styled-components"; // Styled components
-import "./dashboard.css"; // Import the dashboard styles
+import nhost from "./nhost";
+import styled from "styled-components";
+import "./dashboard.css";
 import { v4 as uuidv4 } from "uuid";
 
 // Styled components for invite code section
@@ -67,13 +67,14 @@ const CopySuccessMessage = styled.p`
 function Dashboard() {
   const user = useUserData();
   const navigate = useNavigate();
-  const [profileImage, setProfileImage] = useState(null); // New state for profile image
+  const [profileImage, setProfileImage] = useState(null);
   const [croppedImage, setCroppedImage] = useState(null);
-  const [newStyle, setNewStyle] = useState(""); // Add this state for handling new styles
+  const [newStyle, setNewStyle] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [artistData, setArtistData] = useState({
+    id: null,
     name: "",
     address: "",
     facebook: "",
@@ -87,8 +88,8 @@ function Dashboard() {
   const { data, loading, error, refetch } = useQuery(
     GET_TATTOO_ARTIST_BY_USER_ID,
     {
-      variables: { user_id: user?.id }, // Add a safe check for user id
-      skip: !user, // Skip the query if the user is not logged in
+      variables: { user_id: user?.id },
+      skip: !user,
     }
   );
 
@@ -102,7 +103,7 @@ function Dashboard() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [showCropModal, setShowCropModal] = useState(false); // Control crop modal visibility
+  const [showCropModal, setShowCropModal] = useState(false);
 
   useEffect(() => {
     if (data && data.tattoo_artists.length > 0) {
@@ -111,19 +112,19 @@ function Dashboard() {
   }, [data]);
 
   const handleProfileImageChange = (e) => {
-    setProfileImage(URL.createObjectURL(e.target.files[0])); // Preview the image
-    setShowCropModal(true); // Show the cropping modal
+    setProfileImage(URL.createObjectURL(e.target.files[0]));
+    setShowCropModal(true);
   };
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels); // Set the cropped area
+    setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleCropConfirm = async () => {
     try {
-      const croppedImg = await getCroppedImg(profileImage, croppedAreaPixels); // Crop the image
-      setCroppedImage(croppedImg); // Store the cropped image
-      setShowCropModal(false); // Hide the cropping modal
+      const croppedImg = await getCroppedImg(profileImage, croppedAreaPixels);
+      setCroppedImage(croppedImg);
+      setShowCropModal(false);
     } catch (e) {
       console.error(e);
     }
@@ -132,12 +133,10 @@ function Dashboard() {
   const handleProfileImageUpload = async () => {
     if (!croppedImage) return;
 
-    // Convert the cropped image blob into a file
     const file = new File([croppedImage], "profile-image.jpg", {
       type: "image/jpeg",
     });
 
-    // Upload the profile image
     const { fileMetadata, error } = await nhost.storage.upload({
       file,
     });
@@ -148,13 +147,10 @@ function Dashboard() {
       return;
     }
 
-    // Get the public URL for the uploaded profile image
     const imageUrl = nhost.storage.getPublicUrl({ fileId: fileMetadata.id });
 
-    // Update artistData with the new profile image URL
     setArtistData({ ...artistData, imageurl: imageUrl });
 
-    // Update the artist's profile in the database
     await updateArtist({
       variables: {
         id: artistData.id,
@@ -164,11 +160,10 @@ function Dashboard() {
         instagram: artistData.instagram,
         twitter: artistData.twitter,
         location: artistData.location,
-        imageurl: imageUrl, // Save the new image URL
+        imageurl: imageUrl,
       },
     });
 
-    // Refetch artist data to update the UI
     await refetch();
 
     alert("Profile image uploaded successfully!");
@@ -183,17 +178,58 @@ function Dashboard() {
 
   const handleSave = async () => {
     try {
+      let artistId = artistData.id;
+
+      const isProfileExist = data && data.tattoo_artists.length > 0;
+
+      // Check if we are updating an existing profile or creating a new one
+      if (isProfileExist) {
+        // Update existing profile
+        await updateArtist({
+          variables: {
+            id: artistData.id,
+            name: artistData.name,
+            address: artistData.address,
+            facebook: artistData.facebook,
+            instagram: artistData.instagram,
+            twitter: artistData.twitter,
+            location: artistData.location,
+            imageurl: artistData.imageurl,
+          },
+        });
+      } else {
+        // Create new profile
+        const result = await createArtist({
+          variables: {
+            user_id: user.id,
+            name: artistData.name,
+            address: artistData.address,
+            facebook: artistData.facebook,
+            instagram: artistData.instagram,
+            twitter: artistData.twitter,
+            location: artistData.location,
+            imageurl: artistData.imageurl,
+          },
+        });
+
+        artistId = result.data.insert_tattoo_artists_one.id;
+
+        setArtistData({
+          ...artistData,
+          id: artistId,
+        });
+      }
+
+      // Now that we have a valid artistId, proceed to add new styles
       if (newStyle.trim()) {
-        // Split the new styles by comma and loop over each style
         const stylesArray = newStyle.split(",").map((style) => style.trim());
 
         for (let style of stylesArray) {
           if (style) {
-            // Save each style before saving the artist profile
             const { data: styleData } = await addNewStyle({
               variables: {
                 style: style,
-                tattoo_artist_id: artistData.id,
+                tattoo_artist_id: artistId,
               },
             });
             if (styleData) {
@@ -212,37 +248,6 @@ function Dashboard() {
         setNewStyle("");
       }
 
-      // Check if we are updating an existing profile or creating a new one
-      if (data && data.tattoo_artists.length > 0) {
-        // Update existing profile
-        await updateArtist({
-          variables: {
-            id: artistData.id,
-            name: artistData.name,
-            address: artistData.address,
-            facebook: artistData.facebook,
-            instagram: artistData.instagram,
-            twitter: artistData.twitter,
-            location: artistData.location,
-            imageurl: artistData.imageurl,
-          },
-        });
-      } else {
-        // Create new profile
-        await createArtist({
-          variables: {
-            user_id: user.id,
-            name: artistData.name,
-            address: artistData.address,
-            facebook: artistData.facebook,
-            instagram: artistData.instagram,
-            twitter: artistData.twitter,
-            location: artistData.location,
-            imageurl: artistData.imageurl,
-          },
-        });
-      }
-
       // Refetch the artist data after save
       await refetch();
 
@@ -254,11 +259,11 @@ function Dashboard() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login"); // Redirect to login page after sign-out
+    navigate("/login");
   };
 
   const handleGenerateCode = async () => {
-    const newCode = uuidv4(); // Generate a new UUID using uuidv4
+    const newCode = uuidv4();
 
     try {
       const { data } = await createInviteCode({
@@ -289,7 +294,7 @@ function Dashboard() {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading dashboard: {error.message}</p>;
   if (!user) {
-    return null; // Return null or redirect if the user is not signed in
+    return null;
   }
 
   const isProfileExist = data && data.tattoo_artists.length > 0;
@@ -302,79 +307,91 @@ function Dashboard() {
       <h2>Dashboard</h2>
       <h3>{isProfileExist ? "Update Profile" : "Create Profile"}</h3>
 
-      {/* Profile Image Upload */}
-      {artistData.imageurl && (
-        <div className="profile-image-container">
-          <img
-            src={artistData.imageurl}
-            alt="Current Profile"
-            className="profile-image"
-          />
-        </div>
-      )}
-      <div className="custom-file-upload">
-        <label htmlFor="profileImageUpload" className="file-upload-label">
-          Change Profile Image
-        </label>
-        <input
-          type="file"
-          id="profileImageUpload"
-          onChange={handleProfileImageChange}
-          accept="image/*"
-          className="file-input"
-        />
-      </div>
-      {croppedImage && (
+      {/* Conditionally render the profile image upload section */}
+      {isProfileExist && (
         <>
-          <img src={URL.createObjectURL(croppedImage)} alt="Cropped" />
-          <button onClick={handleProfileImageUpload}>
-            Upload Profile Image
-          </button>
+          {/* Profile Image Upload */}
+          {artistData.imageurl && (
+            <div className="profile-image-container">
+              <img
+                src={artistData.imageurl}
+                alt="Current Profile"
+                className="profile-image"
+              />
+            </div>
+          )}
+          <div className="custom-file-upload">
+            <label htmlFor="profileImageUpload" className="file-upload-label">
+              Change Profile Image
+            </label>
+            <input
+              type="file"
+              id="profileImageUpload"
+              onChange={handleProfileImageChange}
+              accept="image/*"
+              className="file-input"
+            />
+          </div>
+          {croppedImage && (
+            <>
+              <img src={URL.createObjectURL(croppedImage)} alt="Cropped" />
+              <button onClick={handleProfileImageUpload}>
+                Upload Profile Image
+              </button>
+            </>
+          )}
+
+          {/* Image Cropper Modal */}
+          {showCropModal && (
+            <div className="cropper-modal">
+              <div className="cropper-wrapper">
+                <Cropper
+                  image={profileImage}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              </div>
+              <div className="cropper-controls">
+                <button onClick={handleCropConfirm}>Confirm Crop</button>
+                <button onClick={() => setShowCropModal(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {/* Image Cropper Modal */}
-      {showCropModal && (
-        <div className="cropper-modal">
-          <div className="cropper-wrapper">
-            <Cropper
-              image={profileImage}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
-          </div>
-          <div className="cropper-controls">
-            <button onClick={handleCropConfirm}>Confirm Crop</button>
-            <button onClick={() => setShowCropModal(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
       {/* Styles Section */}
-      <h3>Styles you specialize in</h3>
-      {artistData.styles && artistData.styles.length > 0 ? (
-        <div className="style-list">
-          {artistData.styles.map((style) => (
-            <div key={style.id} className="style-item">
-              <p>{style.style}</p> {/* Display the style name */}
+      {isProfileExist && (
+        <>
+          <h3>Styles you specialize in</h3>
+          {artistData.styles && artistData.styles.length > 0 ? (
+            <div className="style-list">
+              {artistData.styles.map((style) => (
+                <div key={style.id} className="style-item">
+                  <p>{style.style}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <p>No styles selected yet</p>
+          ) : (
+            <p>No styles selected yet</p>
+          )}
+        </>
       )}
 
-      <h3>Tattoo style</h3>
+      {/* Tattoo Styles Input */}
+      <h3>Tattoo Styles</h3>
       <input
         type="text"
         value={newStyle}
         onChange={(e) => setNewStyle(e.target.value)}
         placeholder="Your styles (separate by comma)"
       />
+
+      {/* Profile Information Inputs */}
       <input
         type="text"
         name="name"
@@ -394,7 +411,7 @@ function Dashboard() {
         name="location"
         value={artistData.location}
         onChange={handleChange}
-        placeholder="City or town"
+        placeholder="City or Town"
       />
       <input
         type="text"
@@ -417,39 +434,46 @@ function Dashboard() {
         onChange={handleChange}
         placeholder="Twitter URL"
       />
-      <button onClick={handleSave}>Save</button>
 
+      {/* Save Button */}
+      <button onClick={handleSave}>
+        {isProfileExist ? "Update Profile" : "Create Profile"}
+      </button>
+
+      {/* Conditionally render other sections that require the profile to exist */}
       {isProfileExist && (
         <>
+          {/* Upload Work Images */}
           <h3>Upload Work Images</h3>
           <ImageUploader artistId={artistData.id} />
-        </>
-      )}
 
-      <h3>Generate Invite Code</h3>
-      <p>
-        Generate a unique code to invite other tattoo artists to join the
-        platform. Share the code with them to help grow the community!
-      </p>
-      <button onClick={handleGenerateCode}>Generate Invite Code</button>
+          {/* Invite Code Generation */}
+          <h3>Generate Invite Code</h3>
+          <p>
+            Generate a unique code to invite other tattoo artists to join the
+            platform. Share the code with them to help grow the community!
+          </p>
+          <button onClick={handleGenerateCode}>Generate Invite Code</button>
 
-      {inviteCode && (
-        <InviteContainer>
-          <p>Your invite code URL:</p>
-          <InviteLink
-            href={inviteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {inviteUrl}
-          </InviteLink>
-          <CopyButton onClick={() => copyToClipboard(inviteUrl)}>
-            Copy URL
-          </CopyButton>
-          {copied && (
-            <CopySuccessMessage>Copied to clipboard!</CopySuccessMessage>
+          {inviteCode && (
+            <InviteContainer>
+              <p>Your invite code URL:</p>
+              <InviteLink
+                href={inviteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {inviteUrl}
+              </InviteLink>
+              <CopyButton onClick={() => copyToClipboard(inviteUrl)}>
+                Copy URL
+              </CopyButton>
+              {copied && (
+                <CopySuccessMessage>Copied to clipboard!</CopySuccessMessage>
+              )}
+            </InviteContainer>
           )}
-        </InviteContainer>
+        </>
       )}
 
       {/* Sign Out Button */}
