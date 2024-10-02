@@ -16,6 +16,7 @@ import Dashboard from "./Dashboard";
 import Header from "./Header";
 import styled from "styled-components";
 import AdInfo from "./AdInfo";
+import AdminDashboard from "./AdminDashboard";
 
 // Initialize Nhost client with your subdomain and region
 const nhost = new NhostClient({
@@ -56,6 +57,7 @@ const App = () => {
               <Route path="*" element={<h2>Page Not Found</h2>} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/login" element={<LoginPage />} />
               <Route
                 path="/portfolio/:artistId"

@@ -280,3 +280,71 @@ export const INITIALIZE_INTERACTION_COUNTS = gql`
     }
   }
 `;
+
+// src/queries.js
+
+export const GET_ALL_DATA = gql`
+  query GetAll {
+    tattoo_artists {
+      id
+      name
+      location
+      address
+      shop_name
+      instagram
+      twitter
+      facebook
+      imageurl
+      styles {
+        style
+      }
+      work_images {
+        imageurl
+      }
+    }
+    invite_codes {
+      id
+      code
+      used
+    }
+  }
+`;
+
+// Mutation to delete a tattoo artist
+export const DELETE_TATTOO_ARTIST = gql`
+  mutation DeleteTattooArtist($id: uuid!) {
+    delete_tattoo_artists_by_pk(id: $id) {
+      id
+    }
+  }
+`;
+
+// Mutation to delete an invite
+export const DELETE_INVITE = gql`
+  mutation DeleteInvite($id: uuid!) {
+    delete_invite_codes_by_pk(id: $id) {
+      id
+    }
+  }
+`;
+
+export const DELETE_TATTOO_ARTIST_INTERACTIONS = gql`
+  mutation DeleteArtistInteractions($artist_id: uuid!) {
+    delete_artist_interaction_counts(
+      where: { artist_id: { _eq: $artist_id } }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+// Mutation to delete a work image by its image URL
+export const DELETE_WORK_IMAGE = gql`
+  mutation DeleteWorkImage($imageurl: String!) {
+    delete_work_images(where: { imageurl: { _eq: $imageurl } }) {
+      returning {
+        id
+      }
+    }
+  }
+`;
