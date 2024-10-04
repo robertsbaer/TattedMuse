@@ -205,6 +205,7 @@ const ArtistPortfolio = () => {
     variables: { artist_id: artistId },
     onCompleted: (data) => {
       if (!data?.artist_interaction_counts_by_pk) {
+        // Only initialize the interaction count if it does not exist
         initializeInteractionCounts({
           variables: { artist_id: artistId },
         });
@@ -229,10 +230,6 @@ const ArtistPortfolio = () => {
 
   return (
     <PortfolioContainer>
-      <BackButton onClick={() => navigate(-1)}>
-        <FaArrowLeft />
-      </BackButton>
-
       <ArtistDetails>
         <ArtistName>{artist.name}</ArtistName>
         <ArtistProfileImage

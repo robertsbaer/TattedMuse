@@ -1,7 +1,7 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { NhostClient, NhostProvider } from "@nhost/react";
+import { NhostClient, NhostProvider, useUserData } from "@nhost/react";
 import {
   ApolloProvider,
   ApolloClient,
@@ -13,6 +13,7 @@ import ArtistPortfolio from "./ArtistPortfolio";
 import SignupPage from "./SignupPage";
 import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
+import UserDashboard from "./UserDashboard";
 import Header from "./Header";
 import styled from "styled-components";
 import AdInfo from "./AdInfo";
@@ -46,6 +47,8 @@ const AppContainer = styled.div`
 `;
 
 const App = () => {
+  const user = useUserData(); // Get the current user's data, including their role
+
   return (
     <NhostProvider nhost={nhost}>
       <ApolloProvider client={apolloClient}>
@@ -56,9 +59,15 @@ const App = () => {
               <Route path="/" element={<ArtistList />} />
               <Route path="*" element={<h2>Page Not Found</h2>} />
               <Route path="/signup" element={<SignupPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/login" element={<LoginPage />} />
+
+              {/* Conditionally render artist dashboard or user dashboard */}
+              {user?.role === "artist" ? (
+                <Route path="/dashboard" element={<Dashboard />} />
+              ) : (
+                <Route path="/user-dashboard" element={<UserDashboard />} />
+              )}
+
               <Route
                 path="/portfolio/:artistId"
                 element={<ArtistPortfolio />}

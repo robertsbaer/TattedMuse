@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSignUpEmailPassword, useAuthenticationStatus } from "@nhost/react";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useLazyQuery } from "@apollo/client";
 import { VALIDATE_INVITE_CODE, MARK_INVITE_CODE_USED } from "./queries"; // Import necessary GraphQL queries
 import styled from "styled-components";
 import { Link } from "react-router-dom";
@@ -81,11 +81,6 @@ const ErrorMessage = styled.p`
   margin-top: 10px;
 `;
 
-const SuccessMessage = styled.p`
-  color: green;
-  margin-top: 10px;
-`;
-
 const BackButton = styled.button`
   position: fixed;
   top: 20px;
@@ -107,22 +102,18 @@ const BackButton = styled.button`
   }
 `;
 
-// SignupPage component with invite system integrated
 const SignupPage = () => {
   const { isAuthenticated } = useAuthenticationStatus();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState(""); // State for invite code
+  const [isArtist, setIsArtist] = useState(false); // New state to check if the user is an artist
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const { signUpEmailPassword, isLoading } = useSignUpEmailPassword();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Get search params from the URL
 
-  // Use query for validating invite code
-  const { data: inviteData, refetch } = useQuery(VALIDATE_INVITE_CODE, {
-    variables: { code: inviteCode },
-    skip: true, // Skip query until explicitly called
-  });
+  // Use useLazyQuery to manually validate invite code
+  const [validateInviteCode, { data }] = useLazyQuery(VALIDATE_INVITE_CODE);
 
   // Mutation for marking the invite code as used
   const [markInviteCodeUsed] = useMutation(MARK_INVITE_CODE_USED);
@@ -131,33 +122,33 @@ const SignupPage = () => {
     if (isAuthenticated) {
       navigate("/dashboard", { replace: true });
     }
-
-    // Autofill the invite code from the URL query parameters
-    const codeFromURL = searchParams.get("inviteCode");
-    if (codeFromURL) {
-      setInviteCode(codeFromURL);
-    }
-  }, [isAuthenticated, navigate, searchParams]);
+  }, [isAuthenticated, navigate]);
 
   const handleSignup = async (email, password, inviteCode) => {
     try {
-      // Step 1: Validate the invite code
-      const { data } = await refetch(); // Manually trigger the invite code validation
-      if (!data.invite_codes.length || data.invite_codes[0].used) {
-        setError("Invalid or used invite code");
-        return;
+      // If the user is an artist, validate the invite code
+      if (isArtist) {
+        const { data } = await validateInviteCode({
+          variables: { code: inviteCode },
+        });
+        if (!data.invite_codes.length || data.invite_codes[0].used) {
+          setError("Invalid or used invite code");
+          return;
+        }
       }
 
-      // Step 2: Sign up the user
+      // Proceed with signing up the user
       const { error } = await signUpEmailPassword(email, password);
       if (error) {
         setError(error.message);
       } else {
-        // Step 3: Mark the invite code as used
-        await markInviteCodeUsed({ variables: { code: inviteCode } });
+        // If the user is an artist, mark the invite code as used
+        if (isArtist) {
+          await markInviteCodeUsed({ variables: { code: inviteCode } });
+        }
 
-        // Step 4: Redirect to the dashboard
-        navigate("/dashboard");
+        // Redirect the user to the appropriate dashboard
+        navigate(isArtist ? "/dashboard" : "/user-dashboard");
       }
     } catch (signupError) {
       setError("Error during sign-up: " + signupError.message);
@@ -204,17 +195,31 @@ const SignupPage = () => {
             />
           </FormField>
           <FormField>
-            <Label htmlFor="inviteCode">Invite Code</Label>
-            <Input
-              type="text"
-              id="inviteCode"
-              name="inviteCode"
-              value={inviteCode} // Autofill invite code from URL
-              onChange={(e) => setInviteCode(e.target.value)}
-              required
-              placeholder="Enter your invite code"
-            />
+            <Label>
+              <input
+                type="checkbox"
+                checked={isArtist}
+                onChange={() => setIsArtist(!isArtist)}
+              />
+              Sign up as an artist
+            </Label>
           </FormField>
+
+          {isArtist && (
+            <FormField>
+              <Label htmlFor="inviteCode">Invite Code</Label>
+              <Input
+                type="text"
+                id="inviteCode"
+                name="inviteCode"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                required={isArtist} // Require invite code only for artists
+                placeholder="Enter your invite code"
+              />
+            </FormField>
+          )}
+
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Signing up..." : "Sign Up"}
           </Button>
@@ -223,7 +228,7 @@ const SignupPage = () => {
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         <div style={{ marginTop: "20px" }}>
-          <p style={{ color: "#fff" }}>Already have an account? </p>
+          <p style={{ color: "#fff" }}>Already have an account?</p>
           <StyledLinkButton to="/login">Login here</StyledLinkButton>
         </div>
 

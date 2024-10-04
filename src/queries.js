@@ -275,6 +275,10 @@ export const INITIALIZE_INTERACTION_COUNTS = gql`
   mutation InitializeInteractionCounts($artist_id: uuid!) {
     insert_artist_interaction_counts_one(
       object: { artist_id: $artist_id, portfolio_views: 0, address_clicks: 0 }
+      on_conflict: {
+        constraint: artist_interaction_counts_pkey
+        update_columns: []
+      }
     ) {
       artist_id
     }
@@ -344,6 +348,81 @@ export const DELETE_WORK_IMAGE = gql`
     delete_work_images(where: { imageurl: { _eq: $imageurl } }) {
       returning {
         id
+      }
+    }
+  }
+`;
+
+export const ADD_FAVORITE_ARTIST = gql`
+  mutation AddFavoriteArtist($user_id: uuid!, $artist_id: uuid!) {
+    insert_user_favorite_artists_one(
+      object: { user_id: $user_id, artist_id: $artist_id, liked: true }
+    ) {
+      id
+    }
+  }
+`;
+
+export const UNLIKE_ARTIST = gql`
+  mutation UnlikeArtist($user_id: uuid!, $artist_id: uuid!) {
+    delete_user_favorite_artists(
+      where: { user_id: { _eq: $user_id }, artist_id: { _eq: $artist_id } }
+    ) {
+      returning {
+        artist_id
+      }
+    }
+  }
+`;
+
+export const GET_USER_FAVORITE_ARTISTS = gql`
+  query GetUserFavoriteArtists($user_id: uuid!) {
+    user_favorite_artists(
+      where: { user_id: { _eq: $user_id }, liked: { _eq: true } }
+    ) {
+      tattoo_artist {
+        id
+        name
+        imageurl
+        location
+        address
+        shop_name
+        instagram
+        twitter
+        facebook
+        styles {
+          style
+        }
+        work_images {
+          imageurl
+        }
+      }
+    }
+  }
+`;
+
+export const SUBSCRIBE_USER_FAVORITE_ARTISTS = gql`
+  subscription SubscribeUserFavoriteArtists($user_id: uuid!) {
+    user_favorite_artists(
+      where: { user_id: { _eq: $user_id }, liked: { _eq: true } }
+    ) {
+      id
+      tattoo_artist {
+        id
+        name
+        imageurl
+        location
+        address
+        shop_name
+        instagram
+        twitter
+        facebook
+        styles {
+          style
+        }
+        work_images {
+          imageurl
+        }
       }
     }
   }

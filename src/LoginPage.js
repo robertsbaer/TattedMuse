@@ -1,7 +1,7 @@
 // src/LoginPage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSignInEmailPassword } from "@nhost/react";
+import { useSignInEmailPassword, useUserData } from "@nhost/react";
 import styled from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -88,6 +88,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const { signInEmailPassword, isLoading } = useSignInEmailPassword();
   const navigate = useNavigate();
+  const user = useUserData(); // Get the logged-in user's data
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -99,8 +100,12 @@ const LoginPage = () => {
       return;
     }
 
-    // On successful login, redirect to dashboard
-    navigate("/dashboard");
+    // On successful login, check the user's role and redirect
+    if (user?.role === "artist") {
+      navigate("/dashboard");
+    } else {
+      navigate("/user-dashboard");
+    }
   };
 
   return (

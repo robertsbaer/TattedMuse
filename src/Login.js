@@ -1,6 +1,5 @@
-// src/Login.js
 import React, { useState, useEffect } from "react";
-import { useSignInEmailPassword } from "@nhost/react";
+import { useSignInEmailPassword, useUserData } from "@nhost/react"; // Added useUserData
 import { useNavigate } from "react-router-dom";
 import { useAuthenticationStatus } from "@nhost/react";
 
@@ -10,12 +9,18 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signInEmailPassword, isLoading, error } = useSignInEmailPassword();
+  const user = useUserData(); // Get the logged-in user's data
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      // Redirect based on user role
+      if (user?.role === "artist") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/user-dashboard", { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

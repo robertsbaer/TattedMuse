@@ -1,16 +1,19 @@
 // ArtistProfile.jsx
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import { useMutation, useQuery } from "@apollo/client";
+import { useUserData } from "@nhost/react"; // Import Nhost hook for user data
 import {
   INCREMENT_PORTFOLIO_VIEW,
   GET_ARTIST_INTERACTIONS,
   INITIALIZE_INTERACTION_COUNTS,
+  ADD_FAVORITE_ARTIST,
+  GET_USER_FAVORITE_ARTISTS,
 } from "./queries";
 
 const ProfileContainer = styled.div`
@@ -113,23 +116,25 @@ const StyledSimpleBar = styled(SimpleBar)`
   }
 `;
 
-const ViewCount = styled.div`
-  margin-top: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #e91e63;
-  padding: 8px 16px;
+const LikeButton = styled.button`
+  background-color: ${(props) => (props.liked ? "#45a049" : "#e91e63")};
+  color: white;
+  padding: 10px;
+  border: none;
   border-radius: 5px;
-  font-size: 1em;
-  font-weight: bold;
-  text-align: center;
-  width: fit-content;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.liked || props.disabled ? "#388e3c" : "#ff4081"};
+  }
 `;
 
 const ArtistProfile = ({
   id,
   name,
   location,
-  shop_name,
   instagram,
   twitter,
   facebook,
@@ -137,15 +142,25 @@ const ArtistProfile = ({
   work_images = [],
   styles = [],
 }) => {
+  const [liked, setLiked] = useState(false);
   const [incrementPortfolioView] = useMutation(INCREMENT_PORTFOLIO_VIEW);
+  const [addFavoriteArtist] = useMutation(ADD_FAVORITE_ARTIST);
   const [initializeInteractionCounts] = useMutation(
     INITIALIZE_INTERACTION_COUNTS
   );
 
-  const { data, loading, error } = useQuery(GET_ARTIST_INTERACTIONS, {
+  const user = useUserData();
+  const userId = user ? user.id : null;
+
+  const {
+    data: interactionsData,
+    loading,
+    error,
+  } = useQuery(GET_ARTIST_INTERACTIONS, {
     variables: { artist_id: id },
     onCompleted: (data) => {
       if (!data?.artist_interaction_counts_by_pk) {
+        // Initialize the interaction count if it doesn't exist
         initializeInteractionCounts({
           variables: { artist_id: id },
         });
@@ -153,21 +168,74 @@ const ArtistProfile = ({
     },
   });
 
+  const { data: favoriteData } = useQuery(GET_USER_FAVORITE_ARTISTS, {
+    variables: { user_id: userId },
+    skip: !userId, // Don't run the query if the user is not logged in
+    onCompleted: (favoriteData) => {
+      const isArtistLiked = favoriteData?.user_favorite_artists?.some(
+        (artist) => artist.tattoo_artist.id === id
+      );
+      setLiked(isArtistLiked);
+    },
+  });
+
   if (loading) return <p>Loading interactions...</p>;
   if (error) return <p>Error loading interactions...</p>;
 
-  const portfolioViews =
-    data?.artist_interaction_counts_by_pk?.portfolio_views || 0;
+  const handleLike = () => {
+    if (!userId) {
+      console.error("User is not logged in.");
+      return;
+    }
 
-  const handlePortfolioClick = () => {
-    incrementPortfolioView({
-      variables: { artist_id: id },
+    if (liked) {
+      console.log("Artist already liked.");
+      return;
+    }
+
+    // Add artist to user's favorites
+    addFavoriteArtist({
+      variables: {
+        user_id: userId,
+        artist_id: id,
+      },
+      update(cache, { data: { insert_user_favorite_artists_one } }) {
+        const existingFavorites = cache.readQuery({
+          query: GET_USER_FAVORITE_ARTISTS,
+          variables: { user_id: userId },
+        });
+
+        const newFavorite = {
+          tattoo_artist: {
+            ...insert_user_favorite_artists_one.tattoo_artist, // Ensure this matches your returned data structure
+          },
+        };
+
+        cache.writeQuery({
+          query: GET_USER_FAVORITE_ARTISTS,
+          variables: { user_id: userId },
+          data: {
+            user_favorite_artists: [
+              ...existingFavorites.user_favorite_artists,
+              newFavorite,
+            ],
+          },
+        });
+      },
+    }).then(() => {
+      setLiked(true); // Immediately reflect the like in the UI
     });
   };
+
+  const portfolioViews =
+    interactionsData?.artist_interaction_counts_by_pk?.portfolio_views || 0;
 
   return (
     <ProfileContainer>
       <ArtistImage src={imageurl} alt={`${name}'s profile`} />
+      <LikeButton liked={liked} disabled={liked} onClick={handleLike}>
+        {liked ? "Liked" : "Like Artist"}
+      </LikeButton>
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>
       <h3>Styles</h3>
@@ -223,8 +291,10 @@ const ArtistProfile = ({
           ))}
         </div>
       </StyledSimpleBar>
-      {/* <ViewCount>{`Portfolio Views: ${portfolioViews}`}</ViewCount> */}
-      <PortfolioLink to={`/portfolio/${id}`} onClick={handlePortfolioClick}>
+      <PortfolioLink
+        to={`/portfolio/${id}`}
+        onClick={() => incrementPortfolioView({ variables: { artist_id: id } })}
+      >
         View Portfolio
       </PortfolioLink>
     </ProfileContainer>
