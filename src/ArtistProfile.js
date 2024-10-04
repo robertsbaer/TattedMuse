@@ -1,5 +1,3 @@
-// ArtistProfile.jsx
-
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
@@ -8,6 +6,7 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import { useMutation, useQuery } from "@apollo/client";
 import { useUserData } from "@nhost/react";
+import { gql } from "graphql-tag";
 import {
   INCREMENT_PORTFOLIO_VIEW,
   GET_ARTIST_INTERACTIONS,
@@ -118,7 +117,7 @@ const StyledSimpleBar = styled(SimpleBar)`
 `;
 
 const LikeButton = styled.button`
-  background-color: ${(props) => (props.liked ? "#45a049" : "#e91e63")};
+  background-color: ${(props) => (props.$liked ? "#45a049" : "#e91e63")};
   color: white;
   padding: 10px;
   border: none;
@@ -128,7 +127,7 @@ const LikeButton = styled.button`
 
   &:hover {
     background-color: ${(props) =>
-      props.liked || props.disabled ? "#388e3c" : "#ff4081"};
+      props.$liked || props.disabled ? "#388e3c" : "#ff4081"};
   }
 `;
 
@@ -171,7 +170,11 @@ const ArtistProfile = ({
     variables: { user_id: userId },
     skip: !userId,
     onCompleted: (favoriteData) => {
-      const isArtistLiked = favoriteData?.user_favorite_artists?.some(
+      if (!favoriteData || !favoriteData.user_favorite_artists) {
+        console.error("No favorite artists returned from query.");
+        return;
+      }
+      const isArtistLiked = favoriteData.user_favorite_artists.some(
         (artist) => artist.tattoo_artist.id === id
       );
       setLiked(isArtistLiked);
@@ -188,64 +191,60 @@ const ArtistProfile = ({
     }
 
     if (liked) {
-      // Unlike the artist
+      // Unlike the artist (remains the same)
       unlikeArtist({
-        variables: {
-          user_id: userId,
-          artist_id: id,
-        },
-        update(cache, { data: { delete_user_favorite_artists } }) {
-          const existingFavorites = cache.readQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-          });
+        variables: { user_id: userId, artist_id: id },
+        update(cache, { data }) {
+          if (!data || !data.delete_user_favorite_artists) {
+            console.error("No data returned from unlikeArtist mutation.");
+            return;
+          }
 
-          const newFavorites = existingFavorites.user_favorite_artists.filter(
-            (favorite) => favorite.tattoo_artist.id !== id
-          );
-
-          cache.writeQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-            data: { user_favorite_artists: newFavorites },
-          });
-        },
-      }).then(() => {
-        setLiked(false); // Update the state to reflect unlike
-      });
-    } else {
-      // Like the artist
-      addFavoriteArtist({
-        variables: {
-          user_id: userId,
-          artist_id: id,
-        },
-        update(cache, { data: { insert_user_favorite_artists_one } }) {
-          const existingFavorites = cache.readQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-          });
-
-          const newFavorite = {
-            tattoo_artist: {
-              ...insert_user_favorite_artists_one.tattoo_artist,
+          cache.modify({
+            fields: {
+              user_favorite_artists(existingFavoritesRefs = [], { readField }) {
+                return existingFavoritesRefs.filter(
+                  (favoriteRef) =>
+                    readField("id", favoriteRef.tattoo_artist) !== id
+                );
+              },
             },
-          };
+          });
+        },
+      }).then(() => setLiked(false));
+    } else {
+      // Like the artist (modified cache handling)
+      addFavoriteArtist({
+        variables: { user_id: userId, artist_id: id },
+        update(cache, { data }) {
+          const { insert_user_favorite_artists_one: newFavorite } = data;
 
+          if (!newFavorite || !newFavorite.tattoo_artist) {
+            console.error("No artist data returned from addFavoriteArtist.");
+            return;
+          }
+
+          const existingFavorites = cache.readQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          });
+
+          // Write the new data back into the cache
           cache.writeQuery({
             query: GET_USER_FAVORITE_ARTISTS,
             variables: { user_id: userId },
             data: {
               user_favorite_artists: [
                 ...existingFavorites.user_favorite_artists,
-                newFavorite,
-              ],
+                newFavorite, // Append the new artist to the existing list
+              ].map((favorite) => ({
+                ...favorite,
+                __typename: "user_favorite_artists", // Ensure correct typename
+              })),
             },
           });
         },
-      }).then(() => {
-        setLiked(true); // Update the state to reflect like
-      });
+      }).then(() => setLiked(true));
     }
   };
 
@@ -255,9 +254,9 @@ const ArtistProfile = ({
   return (
     <ProfileContainer>
       <ArtistImage src={imageurl} alt={`${name}'s profile`} />
-      <LikeButton liked={liked ? "true" : undefined} onClick={handleLikeToggle}>
+      {/* <LikeButton $liked={liked} onClick={handleLikeToggle}>
         {liked ? "Remove Artist from Favorites" : "Save Artist"}
-      </LikeButton>
+      </LikeButton> */}
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>
       <h3>Styles</h3>

@@ -188,7 +188,7 @@ const SocialIcon = styled.a`
 `;
 
 const LikeButton = styled.button`
-  background-color: ${(props) => (props.liked ? "#45a049" : "#e91e63")};
+  background-color: ${(props) => (props.$liked ? "#45a049" : "#e91e63")};
   color: white;
   padding: 10px;
   border: none;
@@ -198,7 +198,7 @@ const LikeButton = styled.button`
 
   &:hover {
     background-color: ${(props) =>
-      props.liked || props.disabled ? "#388e3c" : "#ff4081"};
+      props.$liked || props.disabled ? "#388e3c" : "#ff4081"};
   }
 `;
 
@@ -240,54 +240,40 @@ const ArtistPortfolio = () => {
   });
 
   const handleLikeToggle = () => {
-    if (!userId) {
-      console.error("User is not logged in.");
-      return;
-    }
-
     if (liked) {
       unlikeArtist({
-        variables: {
-          user_id: userId,
-          artist_id: artistId, // Use artistId here
-        },
-        update(cache, { data: { delete_user_favorite_artists } }) {
-          const existingFavorites = cache.readQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-          });
+        variables: { user_id: userId, artist_id: artistId },
+        update(cache, { data }) {
+          if (!data || !data.delete_user_favorite_artists) {
+            console.error("No data returned from unlikeArtist mutation.");
+            return;
+          }
 
-          const newFavorites = existingFavorites.user_favorite_artists.filter(
-            (favorite) => favorite.tattoo_artist.id !== artistId // Use artistId here
-          );
-
-          cache.writeQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-            data: { user_favorite_artists: newFavorites },
+          // Use cache.modify to remove the unliked artist
+          cache.modify({
+            fields: {
+              user_favorite_artists(existingFavoritesRefs = [], { readField }) {
+                return existingFavoritesRefs.filter(
+                  (favoriteRef) =>
+                    readField("id", favoriteRef.tattoo_artist) !== artistId
+                );
+              },
+            },
           });
         },
-      }).then(() => {
-        setLiked(false);
-      });
+      }).then(() => setLiked(false));
     } else {
       addFavoriteArtist({
-        variables: {
-          user_id: userId,
-          artist_id: artistId, // Use artistId here
-        },
-        update(cache, { data: { insert_user_favorite_artists_one } }) {
+        variables: { user_id: userId, artist_id: artistId },
+        update(cache, { data }) {
+          const { insert_user_favorite_artists_one: newFavorite } = data;
+
           const existingFavorites = cache.readQuery({
             query: GET_USER_FAVORITE_ARTISTS,
             variables: { user_id: userId },
           });
 
-          const newFavorite = {
-            tattoo_artist: {
-              ...insert_user_favorite_artists_one.tattoo_artist,
-            },
-          };
-
+          // Add the new favorite artist to the cached list
           cache.writeQuery({
             query: GET_USER_FAVORITE_ARTISTS,
             variables: { user_id: userId },
@@ -299,9 +285,7 @@ const ArtistPortfolio = () => {
             },
           });
         },
-      }).then(() => {
-        setLiked(true);
-      });
+      }).then(() => setLiked(true));
     }
   };
 
@@ -334,26 +318,32 @@ const ArtistPortfolio = () => {
   return (
     <PortfolioContainer>
       <ArtistDetails>
-        <LikeButton liked={liked} onClick={handleLikeToggle}>
+        <LikeButton $liked={liked} onClick={handleLikeToggle}>
           {liked ? "Remove Artist from Favorites" : "Save Artist"}
         </LikeButton>
-        <ArtistName>{artist.name}</ArtistName>
-        <ArtistProfileImage
-          src={artist.imageurl}
-          alt={`${artist.name}'s profile`}
-        />
-        <ArtistLocation>{artist.location}</ArtistLocation>
-        <ArtistShopName>{artist.shop_name}</ArtistShopName>
-        <ArtistAddress
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            artist.address
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleAddressClick}
-        >
-          {artist.address}
-        </ArtistAddress>
+        {artist.name && <ArtistName>{artist.name}</ArtistName>}
+        {artist.imageurl && (
+          <ArtistProfileImage
+            src={artist.imageurl}
+            alt={`${artist.name}'s profile`}
+          />
+        )}
+        {artist.location && <ArtistLocation>{artist.location}</ArtistLocation>}
+        {artist.shop_name && (
+          <ArtistShopName>{artist.shop_name}</ArtistShopName>
+        )}
+        {artist.address && (
+          <ArtistAddress
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              artist.address
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleAddressClick}
+          >
+            {artist.address}
+          </ArtistAddress>
+        )}
       </ArtistDetails>
 
       <SocialLinks>
@@ -376,21 +366,23 @@ const ArtistPortfolio = () => {
 
       <h3 style={{ textAlign: "center" }}>Tattoo Styles</h3>
       <StylesContainer>
-        {artist.styles.map((style, index) => (
-          <StyleTag key={index}>{style.style}</StyleTag>
-        ))}
+        {artist.styles.length > 0 &&
+          artist.styles.map((style, index) => (
+            <StyleTag key={index}>{style.style}</StyleTag>
+          ))}
       </StylesContainer>
 
       <h3 style={{ textAlign: "center" }}>Portfolio</h3>
       <Gallery>
-        {artist.work_images.map((image, index) => (
-          <WorkImageWrapper
-            key={index}
-            onClick={() => handleImageClick(image.imageurl)}
-          >
-            <WorkImage src={image.imageurl} alt={`Work ${index + 1}`} />
-          </WorkImageWrapper>
-        ))}
+        {artist.work_images.length > 0 &&
+          artist.work_images.map((image, index) => (
+            <WorkImageWrapper
+              key={index}
+              onClick={() => handleImageClick(image.imageurl)}
+            >
+              <WorkImage src={image.imageurl} alt={`Work ${index + 1}`} />
+            </WorkImageWrapper>
+          ))}
       </Gallery>
 
       {fullScreenImage && (

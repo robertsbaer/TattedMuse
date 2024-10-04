@@ -124,7 +124,6 @@ const LikedArtists = () => {
   const user = useUserData();
   const userId = user ? user.id : null;
 
-  // Fetch initial data with query
   const {
     data: queryData,
     loading: queryLoading,
@@ -134,64 +133,59 @@ const LikedArtists = () => {
     skip: !userId,
   });
 
-  // Subscribe to real-time updates
   const { data: subscriptionData } = useSubscription(
     SUBSCRIBE_USER_FAVORITE_ARTISTS,
-    {
-      variables: { user_id: userId },
-      skip: !userId,
-    }
+    { variables: { user_id: userId }, skip: !userId }
   );
 
   const [unlikeArtist] = useMutation(UNLIKE_ARTIST, {
     update(cache, { data }) {
-      if (
-        !data ||
-        !data.delete_user_favorite_artists ||
-        !data.delete_user_favorite_artists.returning.length
-      ) {
-        console.error("Error: No artists returned from the unlike mutation.");
+      if (!data || !data.delete_user_favorite_artists) {
+        console.error("No data returned from unlike mutation.");
         return;
       }
 
-      const existingData = cache.readQuery({
-        query: GET_USER_FAVORITE_ARTISTS,
-        variables: { user_id: userId },
+      cache.modify({
+        fields: {
+          user_favorite_artists(existingFavoritesRefs = [], { readField }) {
+            return existingFavoritesRefs.filter(
+              (favoriteRef) =>
+                readField("id", favoriteRef.tattoo_artist) !==
+                data.delete_user_favorite_artists.returning[0].artist_id
+            );
+          },
+        },
       });
-
-      if (existingData && existingData.user_favorite_artists) {
-        const newFavorites = existingData.user_favorite_artists.filter(
-          (favorite) =>
-            favorite.tattoo_artist.id !==
-            data.delete_user_favorite_artists.returning[0].artist_id
-        );
-
-        // Write the new list back to the cache
-        cache.writeQuery({
-          query: GET_USER_FAVORITE_ARTISTS,
-          variables: { user_id: userId },
-          data: { user_favorite_artists: newFavorites },
-        });
-      }
     },
   });
-
-  useEffect(() => {
-    if (queryError) {
-      console.error("Error fetching liked artists:", queryError);
-    }
-  }, [queryError]);
-
-  useEffect(() => {
-    if (subscriptionData) {
-      console.log("Subscription Data Updated:", subscriptionData);
-    }
-  }, [subscriptionData]);
 
   const handleUnlike = async (artistId) => {
     try {
       await unlikeArtist({
         variables: { user_id: userId, artist_id: artistId },
+        // Option 1: Modify the cache directly
+        update(cache, { data }) {
+          const artistId =
+            data.delete_user_favorite_artists.returning[0].artist_id;
+
+          cache.modify({
+            fields: {
+              user_favorite_artists(existingFavoritesRefs = [], { readField }) {
+                return existingFavoritesRefs.filter(
+                  (favoriteRef) =>
+                    readField("id", favoriteRef.tattoo_artist) !== artistId
+                );
+              },
+            },
+          });
+        },
+        // Option 2: Refetch queries after mutation
+        refetchQueries: [
+          {
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          },
+        ],
       });
     } catch (error) {
       console.error("Error unliking artist:", error);
@@ -199,10 +193,17 @@ const LikedArtists = () => {
   };
 
   // Use subscription data if available, otherwise fallback to query data
-  const favoriteArtists =
+  let favoriteArtists =
     subscriptionData?.user_favorite_artists ||
     queryData?.user_favorite_artists ||
     [];
+
+  // Filter out duplicate entries by their unique artist ID
+  favoriteArtists = favoriteArtists.filter(
+    (artist, index, self) =>
+      index ===
+      self.findIndex((a) => a.tattoo_artist.id === artist.tattoo_artist.id)
+  );
 
   if (queryLoading) return <p>Loading liked artists...</p>;
   if (queryError) return <p>Error loading liked artists.</p>;
@@ -224,7 +225,6 @@ const LikedArtists = () => {
                 <ArtistLocation>{tattoo_artist.shop_name}</ArtistLocation>
                 <ArtistLocation>{tattoo_artist.address}</ArtistLocation>
 
-                {/* Social media links */}
                 <SocialLinks>
                   {tattoo_artist.instagram && (
                     <SocialIcon href={tattoo_artist.instagram} target="_blank">
@@ -244,7 +244,6 @@ const LikedArtists = () => {
                 </SocialLinks>
               </Link>
 
-              {/* Unlike button */}
               <UnlikeButton onClick={() => handleUnlike(tattoo_artist.id)}>
                 Unlike
               </UnlikeButton>

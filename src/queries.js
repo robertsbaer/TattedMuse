@@ -358,7 +358,28 @@ export const ADD_FAVORITE_ARTIST = gql`
     insert_user_favorite_artists_one(
       object: { user_id: $user_id, artist_id: $artist_id, liked: true }
     ) {
+      __typename
       id
+      tattoo_artist {
+        id
+        __typename
+        name
+        imageurl
+        location
+        address
+        shop_name
+        instagram
+        twitter
+        facebook
+        styles {
+          __typename
+          style
+        }
+        work_images {
+          __typename
+          imageurl
+        }
+      }
     }
   }
 `;
@@ -369,7 +390,29 @@ export const UNLIKE_ARTIST = gql`
       where: { user_id: { _eq: $user_id }, artist_id: { _eq: $artist_id } }
     ) {
       returning {
+        __typename
+        id
         artist_id
+        tattoo_artist {
+          __typename
+          id
+          name
+          imageurl
+          location
+          address
+          shop_name
+          instagram
+          twitter
+          facebook
+          styles {
+            __typename
+            style
+          }
+          work_images {
+            __typename
+            imageurl
+          }
+        }
       }
     }
   }
@@ -380,8 +423,11 @@ export const GET_USER_FAVORITE_ARTISTS = gql`
     user_favorite_artists(
       where: { user_id: { _eq: $user_id }, liked: { _eq: true } }
     ) {
+      __typename
+      id
       tattoo_artist {
         id
+        __typename
         name
         imageurl
         location
@@ -391,9 +437,11 @@ export const GET_USER_FAVORITE_ARTISTS = gql`
         twitter
         facebook
         styles {
+          __typename
           style
         }
         work_images {
+          __typename
           imageurl
         }
       }
