@@ -7,12 +7,13 @@ import { Link } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import { useMutation, useQuery } from "@apollo/client";
-import { useUserData } from "@nhost/react"; // Import Nhost hook for user data
+import { useUserData } from "@nhost/react";
 import {
   INCREMENT_PORTFOLIO_VIEW,
   GET_ARTIST_INTERACTIONS,
   INITIALIZE_INTERACTION_COUNTS,
   ADD_FAVORITE_ARTIST,
+  UNLIKE_ARTIST,
   GET_USER_FAVORITE_ARTISTS,
 } from "./queries";
 
@@ -145,6 +146,7 @@ const ArtistProfile = ({
   const [liked, setLiked] = useState(false);
   const [incrementPortfolioView] = useMutation(INCREMENT_PORTFOLIO_VIEW);
   const [addFavoriteArtist] = useMutation(ADD_FAVORITE_ARTIST);
+  const [unlikeArtist] = useMutation(UNLIKE_ARTIST); // Add the unlike mutation
   const [initializeInteractionCounts] = useMutation(
     INITIALIZE_INTERACTION_COUNTS
   );
@@ -160,17 +162,14 @@ const ArtistProfile = ({
     variables: { artist_id: id },
     onCompleted: (data) => {
       if (!data?.artist_interaction_counts_by_pk) {
-        // Initialize the interaction count if it doesn't exist
-        initializeInteractionCounts({
-          variables: { artist_id: id },
-        });
+        initializeInteractionCounts({ variables: { artist_id: id } });
       }
     },
   });
 
   const { data: favoriteData } = useQuery(GET_USER_FAVORITE_ARTISTS, {
     variables: { user_id: userId },
-    skip: !userId, // Don't run the query if the user is not logged in
+    skip: !userId,
     onCompleted: (favoriteData) => {
       const isArtistLiked = favoriteData?.user_favorite_artists?.some(
         (artist) => artist.tattoo_artist.id === id
@@ -182,49 +181,72 @@ const ArtistProfile = ({
   if (loading) return <p>Loading interactions...</p>;
   if (error) return <p>Error loading interactions...</p>;
 
-  const handleLike = () => {
+  const handleLikeToggle = () => {
     if (!userId) {
       console.error("User is not logged in.");
       return;
     }
 
     if (liked) {
-      console.log("Artist already liked.");
-      return;
+      // Unlike the artist
+      unlikeArtist({
+        variables: {
+          user_id: userId,
+          artist_id: id,
+        },
+        update(cache, { data: { delete_user_favorite_artists } }) {
+          const existingFavorites = cache.readQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          });
+
+          const newFavorites = existingFavorites.user_favorite_artists.filter(
+            (favorite) => favorite.tattoo_artist.id !== id
+          );
+
+          cache.writeQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+            data: { user_favorite_artists: newFavorites },
+          });
+        },
+      }).then(() => {
+        setLiked(false); // Update the state to reflect unlike
+      });
+    } else {
+      // Like the artist
+      addFavoriteArtist({
+        variables: {
+          user_id: userId,
+          artist_id: id,
+        },
+        update(cache, { data: { insert_user_favorite_artists_one } }) {
+          const existingFavorites = cache.readQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          });
+
+          const newFavorite = {
+            tattoo_artist: {
+              ...insert_user_favorite_artists_one.tattoo_artist,
+            },
+          };
+
+          cache.writeQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+            data: {
+              user_favorite_artists: [
+                ...existingFavorites.user_favorite_artists,
+                newFavorite,
+              ],
+            },
+          });
+        },
+      }).then(() => {
+        setLiked(true); // Update the state to reflect like
+      });
     }
-
-    // Add artist to user's favorites
-    addFavoriteArtist({
-      variables: {
-        user_id: userId,
-        artist_id: id,
-      },
-      update(cache, { data: { insert_user_favorite_artists_one } }) {
-        const existingFavorites = cache.readQuery({
-          query: GET_USER_FAVORITE_ARTISTS,
-          variables: { user_id: userId },
-        });
-
-        const newFavorite = {
-          tattoo_artist: {
-            ...insert_user_favorite_artists_one.tattoo_artist, // Ensure this matches your returned data structure
-          },
-        };
-
-        cache.writeQuery({
-          query: GET_USER_FAVORITE_ARTISTS,
-          variables: { user_id: userId },
-          data: {
-            user_favorite_artists: [
-              ...existingFavorites.user_favorite_artists,
-              newFavorite,
-            ],
-          },
-        });
-      },
-    }).then(() => {
-      setLiked(true); // Immediately reflect the like in the UI
-    });
   };
 
   const portfolioViews =
@@ -233,8 +255,8 @@ const ArtistProfile = ({
   return (
     <ProfileContainer>
       <ArtistImage src={imageurl} alt={`${name}'s profile`} />
-      <LikeButton liked={liked} disabled={liked} onClick={handleLike}>
-        {liked ? "Liked" : "Like Artist"}
+      <LikeButton liked={liked ? "true" : undefined} onClick={handleLikeToggle}>
+        {liked ? "Remove Artist from Favorites" : "Save Artist"}
       </LikeButton>
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>

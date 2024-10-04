@@ -1,17 +1,22 @@
-// ArtistPortfolio.js
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useQuery } from "@apollo/client";
-import { FaArrowLeft } from "react-icons/fa";
-import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
-import { useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
+import {
+  FaArrowLeft,
+  FaInstagram,
+  FaTwitter,
+  FaFacebook,
+} from "react-icons/fa";
+import { useUserData } from "@nhost/react"; // Import the missing hook
 import {
   GET_ARTIST_BY_ID,
   INCREMENT_ADDRESS_CLICKS,
   INITIALIZE_INTERACTION_COUNTS,
   GET_ARTIST_INTERACTIONS,
+  ADD_FAVORITE_ARTIST,
+  UNLIKE_ARTIST,
+  GET_USER_FAVORITE_ARTISTS,
 } from "./queries";
 
 const PortfolioContainer = styled.div`
@@ -114,21 +119,21 @@ const StyleTag = styled.span`
 `;
 
 const Gallery = styled.div`
-  column-count: 2; /* Create two columns */
-  column-gap: 5px; /* Gap between columns */
+  column-count: 2;
+  column-gap: 5px;
   padding: 20px;
-  max-width: 800px; /* Adjust the max-width as needed */
-  margin: 0 auto; /* Center the gallery */
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
 const WorkImageWrapper = styled.div`
   cursor: pointer;
-  break-inside: avoid; /* Prevent images from breaking across columns */
-  margin-bottom: 5px; /* Space between images */
+  break-inside: avoid;
+  margin-bottom: 5px;
 `;
 
 const WorkImage = styled.img`
-  width: 100%; /* Image fills the column width */
+  width: 100%;
   height: auto;
   object-fit: cover;
   border-radius: 5px;
@@ -182,7 +187,29 @@ const SocialIcon = styled.a`
   font-size: 2.5em;
 `;
 
+const LikeButton = styled.button`
+  background-color: ${(props) => (props.liked ? "#45a049" : "#e91e63")};
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.liked || props.disabled ? "#388e3c" : "#ff4081"};
+  }
+`;
+
 const ArtistPortfolio = () => {
+  const [liked, setLiked] = useState(false);
+  const [addFavoriteArtist] = useMutation(ADD_FAVORITE_ARTIST);
+  const [unlikeArtist] = useMutation(UNLIKE_ARTIST); // Add the unlike mutation
+
+  const user = useUserData();
+  const userId = user ? user.id : null;
+
   const [incrementAddressClicks] = useMutation(INCREMENT_ADDRESS_CLICKS);
   const [initializeInteractionCounts] = useMutation(
     INITIALIZE_INTERACTION_COUNTS
@@ -194,22 +221,98 @@ const ArtistPortfolio = () => {
     });
   };
 
-  const { artistId } = useParams();
+  const { artistId } = useParams(); // Use artistId instead of id
   const navigate = useNavigate();
 
   const { loading, error, data } = useQuery(GET_ARTIST_BY_ID, {
-    variables: { id: artistId },
+    variables: { id: artistId }, // Use artistId here
   });
 
   const { data: interactionsData } = useQuery(GET_ARTIST_INTERACTIONS, {
-    variables: { artist_id: artistId },
+    variables: { artist_id: artistId }, // Use artistId here
     onCompleted: (data) => {
       if (!data?.artist_interaction_counts_by_pk) {
-        // Only initialize the interaction count if it does not exist
         initializeInteractionCounts({
-          variables: { artist_id: artistId },
+          variables: { artist_id: artistId }, // Use artistId here
         });
       }
+    },
+  });
+
+  const handleLikeToggle = () => {
+    if (!userId) {
+      console.error("User is not logged in.");
+      return;
+    }
+
+    if (liked) {
+      unlikeArtist({
+        variables: {
+          user_id: userId,
+          artist_id: artistId, // Use artistId here
+        },
+        update(cache, { data: { delete_user_favorite_artists } }) {
+          const existingFavorites = cache.readQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          });
+
+          const newFavorites = existingFavorites.user_favorite_artists.filter(
+            (favorite) => favorite.tattoo_artist.id !== artistId // Use artistId here
+          );
+
+          cache.writeQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+            data: { user_favorite_artists: newFavorites },
+          });
+        },
+      }).then(() => {
+        setLiked(false);
+      });
+    } else {
+      addFavoriteArtist({
+        variables: {
+          user_id: userId,
+          artist_id: artistId, // Use artistId here
+        },
+        update(cache, { data: { insert_user_favorite_artists_one } }) {
+          const existingFavorites = cache.readQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+          });
+
+          const newFavorite = {
+            tattoo_artist: {
+              ...insert_user_favorite_artists_one.tattoo_artist,
+            },
+          };
+
+          cache.writeQuery({
+            query: GET_USER_FAVORITE_ARTISTS,
+            variables: { user_id: userId },
+            data: {
+              user_favorite_artists: [
+                ...existingFavorites.user_favorite_artists,
+                newFavorite,
+              ],
+            },
+          });
+        },
+      }).then(() => {
+        setLiked(true);
+      });
+    }
+  };
+
+  const { data: favoriteData } = useQuery(GET_USER_FAVORITE_ARTISTS, {
+    variables: { user_id: userId },
+    skip: !userId,
+    onCompleted: (favoriteData) => {
+      const isArtistLiked = favoriteData?.user_favorite_artists?.some(
+        (artist) => artist.tattoo_artist.id === artistId // Use artistId here
+      );
+      setLiked(isArtistLiked);
     },
   });
 
@@ -231,6 +334,9 @@ const ArtistPortfolio = () => {
   return (
     <PortfolioContainer>
       <ArtistDetails>
+        <LikeButton liked={liked} onClick={handleLikeToggle}>
+          {liked ? "Remove Artist from Favorites" : "Save Artist"}
+        </LikeButton>
         <ArtistName>{artist.name}</ArtistName>
         <ArtistProfileImage
           src={artist.imageurl}
@@ -250,7 +356,6 @@ const ArtistPortfolio = () => {
         </ArtistAddress>
       </ArtistDetails>
 
-      {/* Add the social media section here */}
       <SocialLinks>
         {artist.instagram && (
           <SocialIcon href={artist.instagram} target="_blank">

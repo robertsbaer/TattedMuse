@@ -15,8 +15,14 @@ const FavoriteArtistsGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
   padding: 20px;
-  width: 100%;
+  width: 100vw;
+  margin: 10px auto;
   max-width: 1200px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr; /* Full width for mobile */
+    padding: 10px; /* Adjust padding for mobile */
+  }
 `;
 
 const ArtistCard = styled.div`
@@ -26,15 +32,26 @@ const ArtistCard = styled.div`
   color: white;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    width: 90vw; /* Full width of the screen */
+    margin: 0 10px; /* Add a small margin around the card */
+    padding: 5vw; /* Slightly reduce padding for mobile */
+  }
 `;
 
 const ArtistImage = styled.img`
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 15px;
   border: 3px solid #e91e63;
+
+  @media (max-width: 768px) {
+    width: 160px; /* Smaller image for mobile */
+    height: 160px;
+  }
 `;
 
 const ArtistName = styled.h2`
@@ -75,6 +92,31 @@ const UnlikeButton = styled.button`
 
   &:hover {
     background-color: #e91e63;
+  }
+`;
+
+const StyledHeading = styled.h2`
+  text-align: center; /* Center horizontally */
+  font-size: 2em; /* Increase font size */
+  font-weight: bold;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #ff4081, #e91e63);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; /* Gradient text effect */
+  padding: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase; /* Make text uppercase for more impact */
+  animation: fadeIn 2s ease-in-out; /* Optional animation for appearance */
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 
@@ -167,7 +209,8 @@ const LikedArtists = () => {
 
   return (
     <div>
-      <h2>Your Favorite Artists</h2>
+      <StyledHeading>Your Favorite Artists</StyledHeading>
+
       {favoriteArtists.length > 0 ? (
         <FavoriteArtistsGrid>
           {favoriteArtists.map(({ tattoo_artist }) => (
@@ -178,8 +221,8 @@ const LikedArtists = () => {
                   alt={tattoo_artist.name}
                 />
                 <ArtistName>{tattoo_artist.name}</ArtistName>
-                <ArtistLocation>{tattoo_artist.location}</ArtistLocation>
-                <ArtistLocation>Shop: {tattoo_artist.shop_name}</ArtistLocation>
+                <ArtistLocation>{tattoo_artist.shop_name}</ArtistLocation>
+                <ArtistLocation>{tattoo_artist.address}</ArtistLocation>
 
                 {/* Social media links */}
                 <SocialLinks>

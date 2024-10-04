@@ -9,10 +9,12 @@ const DashboardContainer = styled.div`
   background-color: #121212;
   color: white;
   min-height: 100vh;
+  min-width: 90vw;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 80px; /* Adjust for header height */
+  margin: 0 auto;
 `;
 
 const SignOutButton = styled.button`
@@ -43,9 +45,7 @@ const UserDashboard = () => {
   return (
     <DashboardContainer>
       <Header />
-      <h1>My Likes</h1>
       <LikedArtists />
-      {/* Add the sign-out button */}
       <SignOutButton onClick={handleSignOut}>Sign Out</SignOutButton>
     </DashboardContainer>
   );
