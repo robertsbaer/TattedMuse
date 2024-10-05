@@ -7,7 +7,6 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
-// Original styles and components
 const SignupContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -123,6 +122,17 @@ const SignupPage = () => {
       navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    // Check if the URL contains an invite code
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCodeFromURL = urlParams.get("inviteCode");
+
+    if (inviteCodeFromURL) {
+      setInviteCode(inviteCodeFromURL);
+      setIsArtist(true); // Automatically check "Sign up as an artist"
+    }
+  }, []);
 
   const handleSignup = async (email, password, inviteCode) => {
     try {

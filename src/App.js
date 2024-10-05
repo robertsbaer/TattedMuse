@@ -1,39 +1,30 @@
 // src/App.js
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { NhostClient, NhostProvider, useUserData } from "@nhost/react";
 import {
-  ApolloProvider,
-  ApolloClient,
-  InMemoryCache,
-  createHttpLink,
-} from "@apollo/client";
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { NhostClient, NhostProvider, useUserData } from "@nhost/react";
+import { ApolloProvider } from "@apollo/client";
+import client from "./apolloClient";
 import ArtistList from "./ArtistList";
-import ArtistPortfolio from "./ArtistPortfolio";
 import SignupPage from "./SignupPage";
 import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
+import ArtistPortfolio from "./ArtistPortfolio";
 import UserDashboard from "./UserDashboard";
-import Header from "./Header";
-import styled from "styled-components";
 import AdInfo from "./AdInfo";
 import AdminDashboard from "./AdminDashboard";
+import Header from "./Header";
+import { useQuery } from "@apollo/client";
+import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries";
+import styled from "styled-components";
 
-// Initialize Nhost client with your subdomain and region
 const nhost = new NhostClient({
   subdomain: process.env.REACT_APP_NHOST_SUBDOMAIN,
   region: process.env.REACT_APP_NHOST_REGION,
-});
-
-// Create an HTTP link to your GraphQL endpoint
-const httpLink = createHttpLink({
-  uri: nhost.graphql.getUrl(),
-});
-
-// Initialize Apollo Client
-const apolloClient = new ApolloClient({
-  link: httpLink,
-  cache: new InMemoryCache(),
 });
 
 const AppContainer = styled.div`
@@ -46,32 +37,69 @@ const AppContainer = styled.div`
   font-family: "Arial", sans-serif;
 `;
 
+// ProtectedRoute component to handle role-based routing for the artist
+const ProtectedRouteForArtist = ({ element: Component, ...rest }) => {
+  const user = useUserData();
+  const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
+    variables: { user_id: user?.id },
+    skip: !user?.id,
+  });
+
+  if (loading) return <p>Loading...</p>; // Add a loading state
+  if (data && data.tattoo_artists.length > 0) {
+    return <Component {...rest} />;
+  }
+  return <Navigate to="/user-dashboard" />;
+};
+
+// ProtectedRoute component to handle role-based routing for the user
+const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
+  const user = useUserData();
+  const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
+    variables: { user_id: user?.id },
+    skip: !user?.id,
+  });
+
+  if (loading) return <p>Loading...</p>; // Add a loading state
+  if (!data || data.tattoo_artists.length === 0) {
+    return <Component {...rest} />;
+  }
+  return <Navigate to="/dashboard" />;
+};
+
 const App = () => {
-  const user = useUserData(); // Get the current user's data, including their role
+  const user = useUserData();
 
   return (
     <NhostProvider nhost={nhost}>
-      <ApolloProvider client={apolloClient}>
+      <ApolloProvider client={client}>
         <AppContainer>
           <Router>
             <Header />
             <Routes>
               <Route path="/" element={<ArtistList />} />
-              <Route path="*" element={<h2>Page Not Found</h2>} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<LoginPage />} />
-
-              {/* Conditionally render artist dashboard or user dashboard */}
-              {user?.role === "artist" ? (
-                <Route path="/dashboard" element={<Dashboard />} />
-              ) : (
-                <Route path="/user-dashboard" element={<UserDashboard />} />
-              )}
-
               <Route
                 path="/portfolio/:artistId"
                 element={<ArtistPortfolio />}
               />
+              {/* Protect artist and user dashboards */}
+              {user ? (
+                <>
+                  <Route
+                    path="/dashboard"
+                    element={<ProtectedRouteForArtist element={Dashboard} />}
+                  />
+                  <Route
+                    path="/user-dashboard"
+                    element={<ProtectedRouteForUser element={UserDashboard} />}
+                  />
+                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                </>
+              ) : (
+                <Route path="*" element={<LoginPage />} />
+              )}
               <Route path="/ad-info" element={<AdInfo />} />
             </Routes>
           </Router>

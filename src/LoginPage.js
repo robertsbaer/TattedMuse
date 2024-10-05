@@ -1,7 +1,9 @@
 // src/LoginPage.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignInEmailPassword, useUserData } from "@nhost/react";
+import { useLazyQuery } from "@apollo/client";
+import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries";
 import styled from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -87,8 +89,12 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { signInEmailPassword, isLoading } = useSignInEmailPassword();
+  const user = useUserData();
   const navigate = useNavigate();
-  const user = useUserData(); // Get the logged-in user's data
+
+  // Lazy query to fetch artist data after login
+  const [getArtistData, { data: artistData, called, loading: artistLoading }] =
+    useLazyQuery(GET_TATTOO_ARTIST_BY_USER_ID);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -100,13 +106,29 @@ const LoginPage = () => {
       return;
     }
 
-    // On successful login, check the user's role and redirect
-    if (user?.role === "artist") {
-      navigate("/dashboard");
-    } else {
-      navigate("/user-dashboard");
+    // Trigger the artist query once the user has logged in successfully
+    if (user?.id) {
+      getArtistData({ variables: { user_id: user.id } });
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      // Query artist data if user is logged in
+      getArtistData({ variables: { user_id: user.id } });
+    }
+  }, [user, getArtistData]);
+
+  useEffect(() => {
+    // Redirect based on the artist data
+    if (artistData && artistData.tattoo_artists.length > 0) {
+      // Artist is found, redirect to dashboard
+      navigate("/dashboard");
+    } else if (called && !artistLoading && user) {
+      // No artist found, redirect to user dashboard
+      navigate("/user-dashboard");
+    }
+  }, [artistData, called, artistLoading, user, navigate]);
 
   return (
     <LoginContainer>
@@ -130,8 +152,8 @@ const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Logging in..." : "Login"}
+        <Button type="submit" disabled={isLoading || artistLoading}>
+          {isLoading || artistLoading ? "Logging in..." : "Login"}
         </Button>
       </LoginForm>
       <Link to="/ad-info">

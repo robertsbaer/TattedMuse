@@ -183,8 +183,6 @@ function Dashboard() {
     });
 
     await refetch();
-
-    // alert("Profile image uploaded successfully!");
   };
 
   const handleChange = (e) => {
@@ -273,7 +271,6 @@ function Dashboard() {
 
       // Refetch artist data after saving
       await refetch();
-      // alert("Profile and styles saved successfully!");
     } catch (error) {
       console.error("Error saving profile or styles:", error);
     }

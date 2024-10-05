@@ -47,8 +47,10 @@ const ArtistList = () => {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error loading artists.</p>;
-
+  if (error) {
+    console.error("Error fetching artists:", error);
+    return <p>Error loading artists.</p>;
+  }
   const filteredArtists = data.tattoo_artists;
 
   return (
