@@ -98,7 +98,8 @@ const App = () => {
                   <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 </>
               ) : (
-                <Route path="*" element={<LoginPage />} />
+                // <Route path="*" element={<LoginPage />} />
+                <Route path="*" element={<Navigate to="/" />} />
               )}
               <Route path="/ad-info" element={<AdInfo />} />
             </Routes>
