@@ -2,7 +2,7 @@
   "name": "tattoo-artist-portal",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://robertsbaer.github.io/tattedmuse/",
+  "homepage": "https://robertsbaer.github.io/museink",
   "dependencies": {
     "@apollo/client": "^3.11.8",
     "@nhost/react": "^3.5.6",
