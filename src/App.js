@@ -74,7 +74,7 @@ const App = () => {
     <NhostProvider nhost={nhost}>
       <ApolloProvider client={client}>
         <AppContainer>
-          <Router>
+          <Router basename="/TattedMuse">
             <Header />
             <Routes>
               <Route path="/" element={<ArtistList />} />
