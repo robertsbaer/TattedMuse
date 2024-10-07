@@ -1,17 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <title>Page Not Found</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>404 - Page Not Found</title>
     <script type="text/javascript">
-        // This script redirects to the correct location without causing a loop
+        // Get the current path
         var path = window.location.pathname;
+
+        // Ensure the new URL is correctly formed with /TattedMuse
         var newUrl = '/TattedMuse' + path;
 
-        // Redirect only if not already at the root or an existing subpage
-        if (path !== '/TattedMuse/' && !path.startsWith('/TattedMuse/')) {
+        // Redirect only if we are not already within the TattedMuse subdirectory
+        if (!path.startsWith('/TattedMuse')) {
             window.location.replace(newUrl);
+        } else {
+            // If the URL cannot be redirected, redirect to home
+            window.location.replace('/TattedMuse/');
         }
     </script>
 </head>
