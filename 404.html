@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Page Not Found</title>
+    <script type="text/javascript">
+        // This script redirects to the correct location without causing a loop
+        var path = window.location.pathname;
+        var newUrl = '/TattedMuse' + path;
+
+        // Redirect only if not already at the root or an existing subpage
+        if (path !== '/TattedMuse/' && !path.startsWith('/TattedMuse/')) {
+            window.location.replace(newUrl);
+        }
+    </script>
+</head>
+
+<body>
+    <h1>404 - Page Not Found</h1>
+    <p>Redirecting...</p>
+</body>
+
+</html>
