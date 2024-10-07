@@ -16,6 +16,7 @@ import {
   GET_ARTIST_INTERACTIONS,
   CREATE_INVITE_CODE,
   INITIALIZE_INTERACTION_COUNTS,
+  GET_ARTIST_SAVES_COUNT,
 } from "./queries";
 import ImageUploader from "./ImageUploader";
 import nhost from "./nhost";
@@ -115,6 +116,14 @@ function Dashboard() {
       setArtistData(data.tattoo_artists[0]);
     }
   }, [data]);
+
+  const { data: savesData, loading: savesLoading } = useQuery(
+    GET_ARTIST_SAVES_COUNT,
+    {
+      variables: { artist_id: artistData.id },
+      skip: !artistData.id,
+    }
+  );
 
   const { data: stylesData } = useQuery(GET_ALL_TATTOO_STYLES);
   const [addNewStyle] = useMutation(ADD_NEW_TATTOO_STYLE);
@@ -322,22 +331,32 @@ function Dashboard() {
     interactionsData?.artist_interaction_counts_by_pk?.portfolio_views || 0;
   const addressClicks =
     interactionsData?.artist_interaction_counts_by_pk?.address_clicks || 0;
+  const savesCount =
+    savesData?.user_favorite_artists_aggregate?.aggregate?.count || 0;
 
   return (
     <div className="dashboard-container">
       <h3>Popularity Stats</h3>
-      {interactionsLoading ? (
-        <p>Loading interactions...</p>
-      ) : (
-        <div className="interaction-container">
-          <p className="interaction-stat">
-            <span className="stat-label">Portfolio Views:</span>
-            <span className="stat-value"> {portfolioViews}</span>
-          </p>
-          <p className="interaction-stat">
-            <span className="stat-label">Address Clicks:</span>
-            <span className="stat-value"> {addressClicks}</span>
-          </p>
+      {isProfileExist && (
+        <div className="popularity-stats">
+          {interactionsLoading || savesLoading ? (
+            <p>Loading interactions...</p>
+          ) : (
+            <div className="interaction-container">
+              <p className="interaction-stat">
+                <span className="stat-label">Portfolio Views:</span>
+                <span className="stat-value"> {portfolioViews}</span>
+              </p>
+              <p className="interaction-stat">
+                <span className="stat-label">Address Clicks:</span>
+                <span className="stat-value"> {addressClicks}</span>
+              </p>
+              <p className="interaction-stat">
+                <span className="stat-label">Saved by Users:</span>
+                <span className="stat-value"> {savesCount}</span>
+              </p>
+            </div>
+          )}
         </div>
       )}
       <button className="back-button" onClick={() => navigate("/")}>

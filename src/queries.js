@@ -249,6 +249,21 @@ export const GET_ARTIST_INTERACTIONS = gql`
   }
 `;
 
+export const GET_ARTIST_SAVES_COUNT = gql`
+  query GetArtistSavesCount($artist_id: uuid!) {
+    user_favorite_artists_aggregate(
+      where: {
+        tattoo_artist: { id: { _eq: $artist_id } }
+        liked: { _eq: true }
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
+
 export const INCREMENT_PORTFOLIO_VIEW = gql`
   mutation IncrementPortfolioView($artist_id: uuid!) {
     update_artist_interaction_counts(
