@@ -155,6 +155,12 @@ const LoginPage = () => {
         <Button type="submit" disabled={isLoading || artistLoading}>
           {isLoading || artistLoading ? "Logging in..." : "Login"}
         </Button>
+        <div style={{ marginTop: "20px" }}>
+          <p style={{ color: "#fff" }}>Don't have an account?</p>
+          <Link to="/signup">
+            <Button>Register</Button>
+          </Link>
+        </div>
       </LoginForm>
       <Link to="/ad-info">
         <Button>Advertise With Us</Button>

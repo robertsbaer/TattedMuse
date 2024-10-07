@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthenticated, useUserData } from "@nhost/react";
 import { useQuery } from "@apollo/client";
 import { FaUserCircle, FaSignInAlt, FaArrowLeft } from "react-icons/fa"; // Import the arrow icon
@@ -41,14 +41,14 @@ const Header = () => {
   const isAuthenticated = useAuthenticated();
   const user = useUserData();
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get the current location
+  const location = useLocation();
   const { data } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
     variables: { user_id: user?.id },
     skip: !user,
   });
 
-  // Function to handle the redirect behavior when on a dashboard
-  const handleExitDashboard = () => {
+  // Function to handle redirecting to the homepage
+  const handleExit = () => {
     navigate("/"); // Redirect to the homepage
   };
 
@@ -58,17 +58,20 @@ const Header = () => {
     location.pathname === "/user-dashboard" ||
     location.pathname === "/admin-dashboard";
 
+  // Determine if the user is on login or signup page
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/signup";
+
   return (
     <HeaderContainer>
       {isAuthenticated ? (
         <>
-          {/* If the user is on a dashboard, show the back arrow and allow them to exit */}
+          {/* If the user is on a dashboard, show the back arrow */}
           {isDashboard ? (
-            <DashboardButton onClick={handleExitDashboard}>
+            <DashboardButton onClick={handleExit}>
               <FaArrowLeft />
             </DashboardButton>
           ) : (
-            /* If the user is not on a dashboard, show the user icon and direct them to the correct dashboard */
             <DashboardButton
               onClick={() =>
                 navigate(
@@ -83,9 +86,18 @@ const Header = () => {
           )}
         </>
       ) : (
-        <DashboardButton onClick={() => navigate("/signup")}>
-          <FaSignInAlt />
-        </DashboardButton>
+        <>
+          {/* If the user is on login or signup page, show the back arrow to go to home */}
+          {isAuthPage ? (
+            <DashboardButton onClick={handleExit}>
+              <FaArrowLeft />
+            </DashboardButton>
+          ) : (
+            <DashboardButton onClick={() => navigate("/signup")}>
+              <FaSignInAlt />
+            </DashboardButton>
+          )}
+        </>
       )}
     </HeaderContainer>
   );
