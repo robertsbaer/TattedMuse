@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/TattedMuse/static/css/main.55fba079.css",
+    "main.js": "/TattedMuse/static/js/main.41e343d1.js",
+    "static/js/453.557a72f2.chunk.js": "/TattedMuse/static/js/453.557a72f2.chunk.js",
+    "index.html": "/TattedMuse/index.html",
+    "main.55fba079.css.map": "/TattedMuse/static/css/main.55fba079.css.map",
+    "main.41e343d1.js.map": "/TattedMuse/static/js/main.41e343d1.js.map",
+    "453.557a72f2.chunk.js.map": "/TattedMuse/static/js/453.557a72f2.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.55fba079.css",
+    "static/js/main.41e343d1.js"
+  ]
+}
