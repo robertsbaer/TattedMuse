@@ -10,12 +10,21 @@ const AdInfoContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  @media (max-width: 768px) {
+    padding: 20px; /* Reduce padding for mobile */
+    margin-top: 70px; /* Add some margin at the top on mobile */
+  }
 `;
 
 const Header = styled.h1`
   font-size: 3rem;
   margin-bottom: 20px;
   color: #e91e63;
+
+  @media (max-width: 768px) {
+    font-size: 2rem; /* Adjust font size for mobile */
+  }
 `;
 
 const Section = styled.section`
@@ -26,23 +35,40 @@ const Section = styled.section`
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    width: 100%; /* Full width on mobile */
+    padding: 15px; /* Reduce padding for mobile */
+  }
 `;
 
 const SectionHeader = styled.h2`
   font-size: 2rem;
   margin-bottom: 15px;
   color: #ff4081;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem; /* Adjust font size for mobile */
+  }
 `;
 
 const Paragraph = styled.p`
   font-size: 1.2rem;
   line-height: 1.6;
+
+  @media (max-width: 768px) {
+    font-size: 1rem; /* Adjust font size for mobile */
+  }
 `;
 
 const AdFormats = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stack elements vertically on mobile */
+  }
 `;
 
 const AdFormatBox = styled.div`
@@ -57,12 +83,21 @@ const AdFormatBox = styled.div`
   &:hover {
     background-color: #444444;
   }
+
+  @media (max-width: 768px) {
+    width: 100%; /* Full width on mobile */
+    margin: 10px 0; /* Adjust margin for spacing on mobile */
+  }
 `;
 
 const AdFormatTitle = styled.h3`
   font-size: 1.5rem;
   margin-bottom: 10px;
   color: #ff4081;
+
+  @media (max-width: 768px) {
+    font-size: 1.3rem; /* Adjust font size for mobile */
+  }
 `;
 
 const ContactButton = styled.a`
@@ -79,6 +114,11 @@ const ContactButton = styled.a`
 
   &:hover {
     background-color: #ff4081;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px 25px; /* Adjust padding for mobile */
+    font-size: 1rem; /* Adjust font size for mobile */
   }
 `;
 
@@ -127,7 +167,7 @@ const AdInfo = () => {
           on rates and packages. We offer flexible options tailored to your
           needs.
         </Paragraph>
-        <ContactButton href="mailto:advertise@tattoosite.com">
+        <ContactButton href="mailto:advertise@tattedmuse.com">
           Get in Touch
         </ContactButton>
       </Section>

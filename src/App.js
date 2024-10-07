@@ -74,7 +74,7 @@ const App = () => {
     <NhostProvider nhost={nhost}>
       <ApolloProvider client={client}>
         <AppContainer>
-          <Router basename="/TattedMuse">
+          <Router>
             <Header />
             <Routes>
               <Route path="/" element={<ArtistList />} />
@@ -98,7 +98,11 @@ const App = () => {
                   <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 </>
               ) : (
-                <Route path="*" element={<LoginPage />} />
+                <>
+                  <Route path="/404" element={<Navigate to="/" />} />
+
+                  <Route path="*" element={<LoginPage />} />
+                </>
               )}
               <Route path="/ad-info" element={<AdInfo />} />
             </Routes>

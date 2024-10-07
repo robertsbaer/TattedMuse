@@ -5,7 +5,6 @@ import { useMutation, useLazyQuery } from "@apollo/client";
 import { VALIDATE_INVITE_CODE, MARK_INVITE_CODE_USED } from "./queries"; // Import necessary GraphQL queries
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
 
 const SignupContainer = styled.div`
   display: flex;
@@ -15,19 +14,33 @@ const SignupContainer = styled.div`
   height: 100vh;
   background-color: #121212;
   color: #ffffff;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding-top: 70px;
+    width: 100%;
+  }
 `;
 
 const FormContainer = styled.div`
-  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #1e1e1e;
   padding: 20px;
-  padding-right: 40px;
-  padding-bottom: 40px;
-  background-color: #2c2c2c;
   border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    max-width: 90vw;
+  }
 `;
 
 const FormField = styled.div`
+  width: 100%;
   margin-bottom: 15px;
 `;
 
@@ -35,69 +48,85 @@ const Label = styled.label`
   display: block;
   color: #fff;
   margin-bottom: 5px;
+
+  @media (max-width: 768px) {
+    font-size: 1.2em;
+  }
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 10px;
+  margin: 10px 0;
   border-radius: 5px;
   border: none;
-  background-color: #3b3b3b;
-  color: #fff;
+  background-color: #333333;
+  color: #ffffff;
+  font-size: 1em;
+
+  &:focus {
+    outline: none;
+    background-color: #444444;
+  }
+
+  @media (max-width: 768px) {
+    padding: 15px;
+    font-size: 1.2em;
+  }
 `;
 
 const Button = styled.button`
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: none;
   background-color: #e91e63;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 1em;
 
   &:hover {
     background-color: #ff4081;
   }
+
+  @media (max-width: 768px) {
+    padding: 15px;
+    font-size: 1.1em;
+  }
 `;
 
 const StyledLinkButton = styled(Link)`
+  width: 50%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
   background-color: #e91e63;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
+  text-align: center;
   cursor: pointer;
-  text-decoration: none; /* Remove underline */
+  text-decoration: none;
   transition: background-color 0.3s;
+  font-size: 1em;
+  margin-bottom: 20px;
 
   &:hover {
     background-color: #ff4081;
+  }
+
+  @media (max-width: 768px) {
+    padding: 15px;
+    font-size: 1.1em;
   }
 `;
 
 const ErrorMessage = styled.p`
   color: red;
   margin-top: 10px;
-`;
 
-const BackButton = styled.button`
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: #e91e63;
-  color: #ffffff;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #ff4081;
+  @media (max-width: 768px) {
+    font-size: 1.1em;
   }
 `;
 
@@ -112,7 +141,7 @@ const SignupPage = () => {
   const navigate = useNavigate();
 
   // Use useLazyQuery to manually validate invite code
-  const [validateInviteCode, { data }] = useLazyQuery(VALIDATE_INVITE_CODE);
+  const [validateInviteCode] = useLazyQuery(VALIDATE_INVITE_CODE);
 
   // Mutation for marking the invite code as used
   const [markInviteCodeUsed] = useMutation(MARK_INVITE_CODE_USED);
@@ -168,9 +197,6 @@ const SignupPage = () => {
   return (
     <SignupContainer>
       <FormContainer>
-        <BackButton onClick={() => navigate("/")}>
-          <FaArrowLeft />
-        </BackButton>
         <h2 style={{ color: "#fff" }}>Sign Up</h2>
         <form
           onSubmit={(e) => {
@@ -237,10 +263,8 @@ const SignupPage = () => {
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
-        <div style={{ marginTop: "20px" }}>
-          <p style={{ color: "#fff" }}>Already have an account?</p>
-          <StyledLinkButton to="/login">Login here</StyledLinkButton>
-        </div>
+        <p style={{ color: "#fff" }}>Already have an account?</p>
+        <StyledLinkButton to="/login">Login here</StyledLinkButton>
 
         {isAuthenticated && (
           <div style={{ marginTop: "20px" }}>

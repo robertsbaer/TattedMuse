@@ -50,7 +50,7 @@ const Button = styled.button`
 
 const ClearButton = styled.button`
   padding: 10px 15px;
-  background-color: #ff4081;
+  background-color: #e91e63;
   color: white;
   border: 1px solid #fff;
   border-radius: 25px 25px; /* Rounded on the right */

@@ -16,6 +16,12 @@ const LoginContainer = styled.div`
   height: 100vh;
   background-color: #121212;
   color: #ffffff;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding-top: 70px;
+    width: 100%;
+  }
 `;
 
 const LoginForm = styled.form`
@@ -26,6 +32,13 @@ const LoginForm = styled.form`
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    max-width: 90vw;
+  }
 `;
 
 const Input = styled.input`
@@ -36,10 +49,16 @@ const Input = styled.input`
   border: none;
   background-color: #333333;
   color: #ffffff;
+  font-size: 1em;
 
   &:focus {
     outline: none;
     background-color: #444444;
+  }
+
+  @media (max-width: 768px) {
+    padding: 15px;
+    font-size: 1.2em;
   }
 `;
 
@@ -53,14 +72,26 @@ const Button = styled.button`
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.3s;
+  font-size: 1em;
 
   &:hover {
     background-color: #ff4081;
+  }
+
+  @media (max-width: 768px) {
+    padding: 15px;
+    font-size: 1.1em;
   }
 `;
 
 const ErrorMessage = styled.p`
   color: #ff4081;
+  margin-top: 10px;
+  font-size: 1em;
+
+  @media (max-width: 768px) {
+    font-size: 1.1em;
+  }
 `;
 
 const BackButton = styled.button`
@@ -81,6 +112,11 @@ const BackButton = styled.button`
 
   &:hover {
     background-color: #ff4081;
+  }
+
+  @media (max-width: 768px) {
+    width: 50px;
+    height: 50px;
   }
 `;
 
@@ -132,9 +168,6 @@ const LoginPage = () => {
 
   return (
     <LoginContainer>
-      <BackButton onClick={() => navigate("/")}>
-        <FaArrowLeft />
-      </BackButton>
       <h1>Login</h1>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <LoginForm onSubmit={handleLogin}>

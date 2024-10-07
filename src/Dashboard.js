@@ -78,6 +78,7 @@ function Dashboard() {
   const [inviteCode, setInviteCode] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState("");
   const [initializeInteractionCounts] = useMutation(
     INITIALIZE_INTERACTION_COUNTS
   );
@@ -207,7 +208,6 @@ function Dashboard() {
 
       const isProfileExist = data && data.tattoo_artists.length > 0;
 
-      // Step 1: Check if the artist profile exists
       if (isProfileExist) {
         // Update existing profile
         await updateArtist({
@@ -224,7 +224,7 @@ function Dashboard() {
           },
         });
       } else {
-        // Step 2: Create a new artist profile
+        // Create a new profile
         const result = await createArtist({
           variables: {
             user_id: user.id,
@@ -238,25 +238,20 @@ function Dashboard() {
             imageurl: artistData.imageurl,
           },
         });
-
-        // Step 3: Capture the new artist's ID
         artistId = result.data.insert_tattoo_artists_one.id;
-
-        // Step 4: Update state with the new artist's ID
         setArtistData({
           ...artistData,
           id: artistId,
         });
 
-        // Step 5: Insert interaction counts for the new artist
         await initializeInteractionCounts({
           variables: {
-            artist_id: artistId, // Use the new artist's ID, not the user ID
+            artist_id: artistId,
           },
         });
       }
 
-      // Step 6: Add new styles if provided
+      // Save styles
       if (newStyle.trim()) {
         const stylesArray = newStyle.split(",").map((style) => style.trim());
         for (let style of stylesArray) {
@@ -264,22 +259,19 @@ function Dashboard() {
             const { data: styleData } = await addNewStyle({
               variables: { style: style, tattoo_artist_id: artistId },
             });
-            if (styleData) {
-              setArtistData((prevData) => ({
-                ...prevData,
-                styles: [
-                  ...(prevData.styles || []),
-                  styleData.insert_styles_one,
-                ],
-              }));
-            }
+            setArtistData((prevData) => ({
+              ...prevData,
+              styles: [...(prevData.styles || []), styleData.insert_styles_one],
+            }));
           }
         }
-        setNewStyle(""); // Clear the input field after saving
+        setNewStyle("");
       }
 
-      // Refetch artist data after saving
+      // Refetch data and show success message
       await refetch();
+      setUpdateMessage("Profile updated successfully!");
+      setTimeout(() => setUpdateMessage(""), 3000); // Clear message after 3 seconds
     } catch (error) {
       console.error("Error saving profile or styles:", error);
     }
@@ -324,7 +316,7 @@ function Dashboard() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoading(false);
-    }, 3000); // 3 seconds delay
+    }, 1000); // 3 seconds delay
 
     // Clean up the timer when the component unmounts
     return () => clearTimeout(timer);
@@ -531,6 +523,8 @@ function Dashboard() {
       </button>
 
       {/* Conditionally render other sections that require the profile to exist */}
+      {updateMessage && <p style={{ color: "green" }}>{updateMessage}</p>}
+
       {isProfileExist && (
         <>
           {/* Upload Work Images */}

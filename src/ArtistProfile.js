@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -6,7 +6,6 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import { useMutation, useQuery } from "@apollo/client";
 import { useUserData } from "@nhost/react";
-import { gql } from "graphql-tag";
 import {
   INCREMENT_PORTFOLIO_VIEW,
   GET_ARTIST_INTERACTIONS,
@@ -28,6 +27,10 @@ const ProfileContainer = styled.div`
   flex-direction: column;
   align-items: center;
   overflow: hidden;
+
+  @media (max-width: 1024px) {
+    width: 80%;
+  }
 
   @media (max-width: 768px) {
     width: 100%;

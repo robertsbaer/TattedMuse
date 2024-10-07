@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import styled from "styled-components";
 import { useQuery, useMutation } from "@apollo/client";
 import {
@@ -187,6 +187,57 @@ const SocialIcon = styled.a`
   font-size: 2.5em;
 `;
 
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding-top: 20vh;
+  color: #ff4081;
+  margin: 0 20px;
+  font-size: 1.2em;
+
+  @media (min-width: 768px) {
+    font-size: 1.5em;
+    padding-top: 30vh;
+  }
+`;
+
+const ErrorMessageLike = styled.div`
+  color: #e91e63;
+  border: 1px solid #e91e63;
+  border-radius: 5px;
+  padding: 5px 10px;
+  text-align: center;
+  margin: 10px auto; /* Center the message */
+  max-width: 400px;
+  font-size: 1em;
+  width: auto; /* Remove any unnecessary width */
+
+  @media (min-width: 768px) {
+    font-size: 1.2em;
+    padding: 10px 15px;
+  }
+`;
+
+const HomeLinkButton = styled.button`
+  display: block; /* Ensures the button is on its own line */
+  margin: 30px auto 0; /* Centers the button horizontally and adds top margin */
+  background-color: #e91e63;
+  color: white;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+
+  &:hover {
+    background-color: #ff4081;
+  }
+
+  @media (min-width: 768px) {
+    padding: 10px 20px;
+    font-size: 0.7em;
+  }
+`;
+
 const LikeButton = styled.button`
   background-color: ${(props) => (props.$liked ? "#45a049" : "#e91e63")};
   color: white;
@@ -204,6 +255,7 @@ const LikeButton = styled.button`
 
 const ArtistPortfolio = () => {
   const [liked, setLiked] = useState(false);
+  const [showError, setShowError] = useState(false);
   const [addFavoriteArtist] = useMutation(ADD_FAVORITE_ARTIST);
   const [unlikeArtist] = useMutation(UNLIKE_ARTIST); // Add the unlike mutation
 
@@ -240,6 +292,11 @@ const ArtistPortfolio = () => {
   });
 
   const handleLikeToggle = () => {
+    if (!userId) {
+      // If the user is not signed in, show an error message
+      setShowError(true);
+      return;
+    }
     if (liked) {
       unlikeArtist({
         variables: { user_id: userId, artist_id: artistId },
@@ -303,8 +360,16 @@ const ArtistPortfolio = () => {
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error loading artist portfolio.</p>;
-
+  // If there's an error, redirect to the 404 page
+  if (error || !data?.tattoo_artists_by_pk) {
+    return (
+      <ErrorMessage>
+        The artist you are searching for does not have a profile or the user ID
+        is incorrect.
+        <HomeLinkButton onClick={() => navigate("/")}>Home</HomeLinkButton>
+      </ErrorMessage>
+    );
+  }
   const artist = data.tattoo_artists_by_pk;
 
   const handleImageClick = (imageUrl) => {
@@ -321,6 +386,11 @@ const ArtistPortfolio = () => {
         <LikeButton $liked={liked} onClick={handleLikeToggle}>
           {liked ? "Remove Artist from Favorites" : "Save Artist"}
         </LikeButton>
+        {showError && (
+          <ErrorMessageLike>
+            You must have an account to save a profile.
+          </ErrorMessageLike>
+        )}
         {artist.name && <ArtistName>{artist.name}</ArtistName>}
         {artist.imageurl && (
           <ArtistProfileImage
