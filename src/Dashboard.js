@@ -319,7 +319,32 @@ function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) return <p>Loading...</p>;
+  const [showLoading, setShowLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoading(false);
+    }, 3000); // 3 seconds delay
+
+    // Clean up the timer when the component unmounts
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   if (error) return <p>Error loading dashboard: {error.message}</p>;
   if (!user) {
     return null;
