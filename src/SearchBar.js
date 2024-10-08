@@ -72,12 +72,13 @@ const SearchBar = ({ searchTerm, setSearchTerm, resetPage }) => {
 
   const handleSearchClick = () => {
     setSearchTerm(localSearchTerm);
+    resetPage(); // Reset the page when a new search is performed
   };
 
   const handleClearClick = () => {
     setLocalSearchTerm("");
     setSearchTerm("");
-    resetPage(); // Resets the page when clearing the search
+    resetPage(); // Reset the page when the search is cleared
   };
 
   return (
