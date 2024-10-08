@@ -10,17 +10,12 @@
         // Get the current path
         var path = window.location.pathname;
 
-        // Ensure the new URL is correctly formed with /TattedMuse
-        var newUrl = '/TattedMuse' + path;
-
-        // Redirect only if we are not already within the TattedMuse subdirectory
-        if (!path.startsWith('/TattedMuse')) {
-            window.location.replace(newUrl);
-        } else {
-            // If the URL cannot be redirected, redirect to home
-            window.location.replace('/TattedMuse/');
+        // Redirect to home if the URL is not found (404)
+        if (path !== '/') {
+            window.location.replace('/');
         }
     </script>
+
 </head>
 
 <body>
