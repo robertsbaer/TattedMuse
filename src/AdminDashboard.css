@@ -144,3 +144,14 @@ a:hover {
 ul {
   list-style: none; /* Removes the bullet points */
 }
+
+.stats {
+  margin-bottom: 20px;
+  background-color: #444;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.stats h2 {
+  color: var(--highlight-color);
+}

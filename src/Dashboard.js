@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useUserData, useSignOut } from "@nhost/react";
 import { useMutation, useQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaTimes } from "react-icons/fa";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "./cropImageHelper";
 import {
@@ -17,6 +17,8 @@ import {
   CREATE_INVITE_CODE,
   INITIALIZE_INTERACTION_COUNTS,
   GET_ARTIST_SAVES_COUNT,
+  GET_WORK_IMAGES_BY_ARTIST_ID, // Newly added import
+  DELETE_WORK_IMAGE, // Newly added import
 } from "./queries";
 import ImageUploader from "./ImageUploader";
 import nhost from "./nhost";
@@ -160,6 +162,17 @@ function Dashboard() {
   const handleProfileImageUpload = async () => {
     if (!croppedImage) return;
 
+    // Fetch the current number of uploaded work images
+    const { data: workImagesData } = await refetchWorkImages();
+    const imageCount = workImagesData?.work_images?.length || 0;
+
+    // Limit to 15 images
+    if (imageCount >= 15) {
+      alert("You cannot upload more than 15 images.");
+      return;
+    }
+
+    // Proceed with the upload if the image count is less than 15
     const file = new File([croppedImage], "profile-image.jpg", {
       type: "image/jpeg",
     });
@@ -316,11 +329,50 @@ function Dashboard() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoading(false);
-    }, 1000); // 3 seconds delay
+    }, 1000); // 1 second delay
 
     // Clean up the timer when the component unmounts
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch work images uploaded by the artist
+  const {
+    data: workImagesData,
+    loading: workImagesLoading,
+    error: workImagesError,
+    refetch: refetchWorkImages,
+  } = useQuery(GET_WORK_IMAGES_BY_ARTIST_ID, {
+    variables: { artistId: artistData.id },
+    skip: !artistData.id,
+  });
+
+  const [deleteWorkImage] = useMutation(DELETE_WORK_IMAGE);
+
+  const handleDeleteImage = async (imageurl) => {
+    try {
+      // Extract file ID from the image URL
+      const fileId = extractFileIdFromUrl(imageurl);
+
+      // Delete the file from Nhost storage
+      const { error: storageError } = await nhost.storage.delete({ fileId });
+      if (storageError) {
+        console.error("Error deleting file from storage:", storageError);
+        return;
+      }
+
+      // Delete the image record from the database
+      await deleteWorkImage({ variables: { imageurl } });
+      await refetchWorkImages();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+    }
+  };
+
+  // Helper function to extract the file ID from the image URL
+  const extractFileIdFromUrl = (url) => {
+    const parts = url.split("/");
+    return parts[parts.length - 1]; // Assuming the file ID is the last part of the URL
+  };
 
   if (showLoading) {
     return (
@@ -530,6 +582,32 @@ function Dashboard() {
           {/* Upload Work Images */}
           <h3>Upload Work Images</h3>
           <ImageUploader artistId={artistData.id} />
+
+          {/* Display Work Images */}
+          <h3>Your Uploaded Images</h3>
+          {workImagesLoading ? (
+            <p>Loading images...</p>
+          ) : workImagesError ? (
+            <p>Error loading images: {workImagesError.message}</p>
+          ) : (
+            <div className="work-images-container-dashboard">
+              {workImagesData.work_images.map((image) => (
+                <div key={image.id} className="work-image-item-dashboard">
+                  <img
+                    src={image.imageurl}
+                    alt="Work"
+                    className="work-image-dashboard"
+                  />
+                  <button
+                    onClick={() => handleDeleteImage(image.imageurl)}
+                    aria-label="Delete image"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Invite Code Generation */}
           <h3>Generate Invite Code</h3>

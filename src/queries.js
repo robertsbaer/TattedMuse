@@ -1,46 +1,6 @@
 // src/queries.js
 import { gql } from "@apollo/client";
 
-export const GET_TATTOO_ARTISTS = gql`
-  query GetTattooArtists {
-    tattoo_artists {
-      id
-      name
-      location
-      shop_name
-      instagram
-      twitter
-      facebook
-      imageurl
-      styles {
-        style
-      }
-      work_images {
-        imageurl
-      }
-    }
-  }
-`;
-
-export const GET_ARTISTS = gql`
-  query GetArtists {
-    tattoo_artists {
-      id
-      name
-      location
-      shop_name
-      address
-      imageurl
-      styles {
-        style
-      }
-      work_images {
-        imageurl
-      }
-    }
-  }
-`;
-
 export const GET_FILTERED_ARTISTS = gql`
   query GetFilteredArtists($searchTerm: String!, $limit: Int, $offset: Int) {
     tattoo_artists(
@@ -306,6 +266,7 @@ export const GET_ALL_DATA = gql`
   query GetAll {
     tattoo_artists {
       id
+      user_id
       name
       location
       address
@@ -487,6 +448,24 @@ export const SUBSCRIBE_USER_FAVORITE_ARTISTS = gql`
           imageurl
         }
       }
+    }
+  }
+`;
+
+export const GET_ALL_USERS = gql`
+  query GetAllUsers {
+    users {
+      id
+      email
+    }
+  }
+`;
+
+export const GET_WORK_IMAGES_BY_ARTIST_ID = gql`
+  query GetWorkImagesByArtistId($artistId: uuid!) {
+    work_images(where: { tattoo_artist_id: { _eq: $artistId } }) {
+      id
+      imageurl
     }
   }
 `;

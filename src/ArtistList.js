@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useQuery } from "@apollo/client";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ArtistProfile from "./ArtistProfile";
+import { GET_FILTERED_ARTISTS } from "./queries";
 import SearchBar from "./SearchBar";
-import { useQuery } from "@apollo/client";
-import { GET_FILTERED_ARTISTS } from "./queries"; // Ensure your query uses _ilike
 
 const PageContainer = styled.div`
   display: flex;
@@ -23,10 +23,9 @@ const ArtistList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [artists, setArtists] = useState([]);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
   const limit = 10;
 
-  // Normalize the search term
   const normalizedSearchTerm = searchTerm
     .trim()
     .toLowerCase()
@@ -36,59 +35,67 @@ const ArtistList = () => {
     variables: {
       searchTerm: `%${normalizedSearchTerm}%`,
       limit,
-      offset: 0, // Start with the first set of results
+      offset: page * limit,
     },
+    fetchPolicy: "cache-first", // Use cache-first to reduce network requests
   });
 
   useEffect(() => {
     if (data && data.tattoo_artists) {
-      setArtists(data.tattoo_artists);
+      setArtists((prevArtists) =>
+        page === 0
+          ? data.tattoo_artists
+          : [...prevArtists, ...data.tattoo_artists]
+      );
     }
-  }, [data]);
+  }, [data, page]);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
-
-  const resetPage = () => {
-    setPage(0);
-    setArtists([]); // Clear the current artist list
+  const debounce = (func, delay) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), delay);
+    };
   };
 
-  const loadMoreArtists = () => {
-    setLoadingMore(true);
-    fetchMore({
+  const loadMoreArtists = async () => {
+    if (loadingMoreRef.current) return;
+    
+    loadingMoreRef.current = true;
+    await fetchMore({
       variables: {
-        offset: artists.length, // Load next batch based on current number of artists
-        limit,
-      },
-      updateQuery: (prevResult, { fetchMoreResult }) => {
-        if (!fetchMoreResult) return prevResult;
-        setLoadingMore(false);
-        setArtists([...artists, ...fetchMoreResult.tattoo_artists]);
+        offset: (page + 1) * limit, // Adjust offset based on the next page
       },
     });
+    setPage((prevPage) => prevPage + 1);
+    loadingMoreRef.current = false;
   };
-
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop ===
-      document.documentElement.offsetHeight
-    ) {
-      loadMoreArtists();
-    }
-  };
-
+  
+  const handleScroll = useCallback(
+    debounce(() => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 100
+      ) {
+        loadMoreArtists();
+      }
+    }, 200),
+    [loadMoreArtists]
+  );
+  
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [artists]);
+  }, [handleScroll]);
+  
+
+  const resetPage = () => {
+    setPage(0);
+    setArtists([]);
+  };
 
   if (loading && artists.length === 0) return <p>Loading...</p>;
-  if (error) {
-    console.error("Error fetching artists:", error);
-    return <p>Error loading artists.</p>;
-  }
+  if (error) return <p>Error loading artists.</p>;
 
   return (
     <PageContainer>
@@ -103,7 +110,6 @@ const ArtistList = () => {
         ) : (
           <p>No artists found matching your search.</p>
         )}
-        {loadingMore && <p>Loading more artists...</p>}
       </ListContainer>
     </PageContainer>
   );

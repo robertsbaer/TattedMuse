@@ -1,31 +1,78 @@
 import React, { useState, useEffect } from "react";
 import nhost from "./nhost";
-import { useMutation } from "@apollo/client";
-import { ADD_WORK_IMAGE } from "./queries";
-import { FaCheckCircle, FaSpinner } from "react-icons/fa"; // Import spinner icon
-import "./ImageUploader.css"; // Ensure to add custom styles here
+import { useMutation, useQuery } from "@apollo/client";
+import { ADD_WORK_IMAGE, GET_ARTIST_BY_ID } from "./queries";
+import { FaCheckCircle, FaSpinner } from "react-icons/fa";
+import "./ImageUploader.css";
 
 function ImageUploader({ artistId }) {
   const [files, setFiles] = useState([]);
   const [addWorkImage] = useMutation(ADD_WORK_IMAGE);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploading, setUploading] = useState(false); // Track upload progress
+  const [uploading, setUploading] = useState(false);
 
-  // Handle file selection
+  // Fetch current images count
+  const { data } = useQuery(GET_ARTIST_BY_ID, {
+    variables: { id: artistId },
+  });
+
+  const currentImageCount =
+    data?.tattoo_artists_by_pk?.work_images?.length || 0;
+
   const handleFileChange = (e) => {
-    setFiles(e.target.files);
+    const selectedFiles = Array.from(e.target.files);
+    if (currentImageCount + selectedFiles.length > 15) {
+      alert("You can only upload a total of 15 images.");
+      return;
+    }
+    setFiles(selectedFiles);
     setUploadSuccess(false);
   };
 
-  // Handle uploading multiple files
+  const resizeImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = () => {
+        const img = new Image();
+        img.src = reader.result;
+
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxWidth = 1024; // Set max width
+          const scaleSize = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = img.height * scaleSize;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, "image/jpeg");
+        };
+
+        img.onerror = (err) => reject(err);
+      };
+
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleUpload = async () => {
     if (files.length === 0) return;
 
-    setUploading(true); // Set uploading state to true
+    setUploading(true);
 
     const uploadPromises = Array.from(files).map(async (file) => {
+      const resizedBlob = await resizeImage(file);
+
+      const resizedFile = new File([resizedBlob], file.name, {
+        type: "image/jpeg",
+      });
       const { fileMetadata, error } = await nhost.storage.upload({
-        file,
+        file: resizedFile,
       });
 
       if (error) {
@@ -35,7 +82,6 @@ function ImageUploader({ artistId }) {
       }
 
       const imageUrl = nhost.storage.getPublicUrl({ fileId: fileMetadata.id });
-
       const { data, errors } = await addWorkImage({
         variables: {
           imageurl: imageUrl,
@@ -53,29 +99,20 @@ function ImageUploader({ artistId }) {
 
     const results = await Promise.all(uploadPromises);
 
-    setUploading(false); // Set uploading state to false
+    setUploading(false);
 
     if (results.includes(null)) {
       alert("One or more images failed to upload.");
     } else {
       setUploadSuccess(true);
-      setFiles([]); // Clear files after upload
+      setFiles([]);
     }
   };
-
-  useEffect(() => {
-    if (uploadSuccess) {
-      const timer = setTimeout(() => {
-        setUploadSuccess(false);
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [uploadSuccess]);
 
   return (
     <div className="custom-file-upload">
       <label htmlFor="workImagesUpload" className="file-upload-label">
-        Choose Work Images
+        Choose Work Images (Max 15)
       </label>
       <input
         type="file"
@@ -91,20 +128,18 @@ function ImageUploader({ artistId }) {
           <div className="file-preview">
             <p>{files.length} image(s) ready for upload:</p>
             <ul>
-              {Array.from(files).map((file, index) => (
+              {files.map((file, index) => (
                 <li key={index}>{file.name}</li>
               ))}
             </ul>
           </div>
 
-          {/* Conditionally render the Upload Images button */}
           <button onClick={handleUpload} disabled={uploading}>
             {uploading ? "Uploading..." : "Upload Images"}
           </button>
         </>
       )}
 
-      {/* Show the loading spinner while uploading */}
       {uploading && (
         <div className="upload-loading">
           <FaSpinner className="spinner-icon" />
@@ -112,7 +147,6 @@ function ImageUploader({ artistId }) {
         </div>
       )}
 
-      {/* Display the success message if upload is successful */}
       {uploadSuccess && (
         <div className="upload-success">
           <FaCheckCircle className="success-icon" />

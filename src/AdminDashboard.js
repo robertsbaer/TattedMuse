@@ -1,43 +1,68 @@
 import React, { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client";
 import { useUserData } from "@nhost/react";
 import { useNavigate } from "react-router-dom";
 import {
   GET_ALL_DATA,
+  GET_ALL_USERS,
   DELETE_TATTOO_ARTIST,
   DELETE_INVITE,
   DELETE_WORK_IMAGE,
-  DELETE_TATTOO_ARTIST_INTERACTIONS, // Correct mutation
+  DELETE_TATTOO_ARTIST_INTERACTIONS,
 } from "./queries";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
   const [artists, setArtists] = useState([]);
   const [invites, setInvites] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [nonArtistUsersCount, setNonArtistUsersCount] = useState(0); // New state for non-artist users
   const user = useUserData();
   const navigate = useNavigate();
+  const client = useApolloClient();
 
-  const { data, refetch } = useQuery(GET_ALL_DATA);
+  const { data: artistData, refetch } = useQuery(GET_ALL_DATA);
+  const { data: userData } = useQuery(GET_ALL_USERS);
+
   const [deleteTattooArtist] = useMutation(DELETE_TATTOO_ARTIST);
   const [deleteInvite] = useMutation(DELETE_INVITE);
   const [deleteWorkImage] = useMutation(DELETE_WORK_IMAGE);
   const [deleteArtistInteractions] = useMutation(
     DELETE_TATTOO_ARTIST_INTERACTIONS
-  ); // Correct mutation
+  );
 
   useEffect(() => {
-    const adminEmail = process.env.REACT_APP_ADMIN_EMAIL; // Fetch admin email from .env
+    const adminEmail = process.env.REACT_APP_ADMIN_EMAIL;
     if (user && user.email !== adminEmail) {
-      navigate("/"); // Redirect non-admins
+      navigate("/");
     }
   }, [user, navigate]);
 
   useEffect(() => {
-    if (data) {
-      setArtists(data.tattoo_artists);
-      setInvites(data.invite_codes);
+    if (artistData) {
+      setArtists(artistData.tattoo_artists);
+      setInvites(artistData.invite_codes);
     }
-  }, [data]);
+  }, [artistData]);
+
+  useEffect(() => {
+    if (userData && artistData) {
+      setUsers(userData.users);
+      setArtists(artistData.tattoo_artists);
+
+      // Get all artist user_ids
+      const artistUserIds = new Set(
+        artistData.tattoo_artists.map((artist) => artist.user_id)
+      );
+
+      // Calculate non-artist users
+      const nonArtistUsersCount = userData.users.filter(
+        (user) => !artistUserIds.has(user.id)
+      ).length;
+
+      setNonArtistUsersCount(nonArtistUsersCount);
+    }
+  }, [userData, artistData]);
 
   const handleDeleteArtist = async (artistId) => {
     const confirmDelete = window.confirm(
@@ -45,15 +70,41 @@ const AdminDashboard = () => {
     );
     if (confirmDelete) {
       try {
-        // Delete interactions first
-        await deleteArtistInteractions({ variables: { artist_id: artistId } });
+        const artistDeletionResult = await deleteTattooArtist({
+          variables: { id: artistId },
+        });
 
-        // Then delete the artist
-        await deleteTattooArtist({ variables: { id: artistId } });
+        if (!artistDeletionResult.data.delete_tattoo_artists_by_pk) {
+          console.warn(
+            "The artist could not be deleted. It may not exist, or there might be a backend constraint preventing deletion."
+          );
+          alert(
+            "The artist could not be deleted. Please check for related records or backend constraints."
+          );
+          return;
+        }
 
-        refetch();
+        client.cache.modify({
+          fields: {
+            tattoo_artists(existingArtists = [], { readField }) {
+              return existingArtists.filter(
+                (artistRef) => readField("id", artistRef) !== artistId
+              );
+            },
+          },
+        });
+
+        setArtists((prevArtists) =>
+          prevArtists.filter((artist) => artist.id !== artistId)
+        );
+
+        await refetch();
+        console.log("Artist deleted successfully and cache updated.");
       } catch (error) {
         console.error("Error deleting the artist:", error);
+        alert(
+          "There was an error deleting the artist. Please check the console for details."
+        );
       }
     }
   };
@@ -65,9 +116,7 @@ const AdminDashboard = () => {
 
   const handleDeleteWorkImage = async (imageUrl) => {
     try {
-      await deleteWorkImage({
-        variables: { imageurl: imageUrl },
-      });
+      await deleteWorkImage({ variables: { imageurl: imageUrl } });
       refetch();
     } catch (error) {
       console.error("Error deleting the image:", error);
@@ -87,7 +136,12 @@ const AdminDashboard = () => {
         Jump to Invites
       </button>
 
-      {/* Tattoo Artists Section */}
+      <div className="stats">
+        <h2>Statistics</h2>
+        <p>Total Artists: {artists.length}</p>
+        <p>Total Non-Artist Users: {nonArtistUsersCount}</p>
+      </div>
+
       <section className="section">
         <h2>Tattoo Artists</h2>
         <ul className="list">
@@ -162,13 +216,12 @@ const AdminDashboard = () => {
         </ul>
       </section>
 
-      {/* Invites Section */}
       <section id="invites-section" className="section">
         <h2>Invites</h2>
         <ul className="list">
           {invites
             .slice()
-            .sort((a, b) => b.used - a.used) // Sort by used status (true/false)
+            .sort((a, b) => b.used - a.used)
             .map((invite) => (
               <li key={invite.id} className="invite-item">
                 <p>

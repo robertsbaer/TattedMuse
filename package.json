@@ -23,6 +23,7 @@
     "react-scripts": "5.0.1",
     "react-scrollbars-custom": "^4.1.1",
     "react-window": "^1.8.10",
+    "resize-image": "^0.1.0",
     "simplebar": "^6.2.7",
     "simplebar-react": "^3.2.6",
     "styled-components": "^6.1.13",
