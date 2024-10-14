@@ -60,7 +60,7 @@ const ArtistList = () => {
 
   const loadMoreArtists = async () => {
     if (loadingMoreRef.current) return;
-    
+
     loadingMoreRef.current = true;
     await fetchMore({
       variables: {
@@ -70,7 +70,7 @@ const ArtistList = () => {
     setPage((prevPage) => prevPage + 1);
     loadingMoreRef.current = false;
   };
-  
+
   const handleScroll = useCallback(
     debounce(() => {
       if (
@@ -79,15 +79,14 @@ const ArtistList = () => {
       ) {
         loadMoreArtists();
       }
-    }, 200),
+    }, 500),
     [loadMoreArtists]
   );
-  
+
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
-  
 
   const resetPage = () => {
     setPage(0);

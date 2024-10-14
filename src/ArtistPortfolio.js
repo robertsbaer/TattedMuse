@@ -450,7 +450,11 @@ const ArtistPortfolio = () => {
               key={index}
               onClick={() => handleImageClick(image.imageurl)}
             >
-              <WorkImage src={image.imageurl} alt={`Work ${index + 1}`} />
+              <WorkImage
+                src={image.imageurl}
+                alt={`Work ${index + 1}`}
+                loading="lazy"
+              />
             </WorkImageWrapper>
           ))}
       </Gallery>

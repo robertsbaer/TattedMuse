@@ -18,14 +18,12 @@ export const GET_FILTERED_ARTISTS = gql`
       id
       name
       location
-      shop_name
-      address
       imageurl
+      work_images(limit: 5) {
+        imageurl
+      }
       styles {
         style
-      }
-      work_images {
-        imageurl
       }
     }
   }

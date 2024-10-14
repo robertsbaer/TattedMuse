@@ -43,6 +43,7 @@ const ProtectedRouteForArtist = ({ element: Component, ...rest }) => {
   const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
     variables: { user_id: user?.id },
     skip: !user?.id,
+    fetchPolicy: "cache-first",
   });
 
   if (loading) return <p>Loading...</p>; // Add a loading state
@@ -58,6 +59,7 @@ const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
   const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
     variables: { user_id: user?.id },
     skip: !user?.id,
+    fetchPolicy: "cache-first",
   });
 
   if (loading) return <p>Loading...</p>; // Add a loading state

@@ -45,6 +45,7 @@ const Header = () => {
   const { data } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
     variables: { user_id: user?.id },
     skip: !user,
+    fetchPolicy: "cache-first",
   });
 
   // Function to handle redirecting to the homepage

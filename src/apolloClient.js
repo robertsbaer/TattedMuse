@@ -1,10 +1,13 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, ApolloLink } from "@apollo/client";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { setContext } from "@apollo/client/link/context";
 import nhost from "./nhost";
 
-// Create an HTTP link to your GraphQL endpoint
-const httpLink = createHttpLink({
+// Create a batched HTTP link to your GraphQL endpoint
+const batchLink = new BatchHttpLink({
   uri: "https://idfwcavlnilnvkccmzvp.graphql.us-east-1.nhost.run/v1",
+  batchMax: 10, // Maximum of 10 queries per batch
+  batchInterval: 20, // 20ms batching interval
 });
 
 // Set up authentication link to include JWT in headers, only if the token exists
@@ -18,9 +21,9 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// Initialize Apollo Client
+// Initialize Apollo Client with batch link
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: ApolloLink.from([authLink, batchLink]), // Use batchLink instead of httpLink
   cache: new InMemoryCache({
     typePolicies: {
       Query: {
