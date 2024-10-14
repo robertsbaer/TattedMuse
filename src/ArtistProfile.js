@@ -311,10 +311,12 @@ const ArtistProfile = ({
               key={index}
               src={image.imageurl}
               alt={`Work ${index + 1}`}
+              loading="lazy" // Lazy loading images
             />
           ))}
         </div>
       </StyledSimpleBar>
+
       <PortfolioLink
         to={`/portfolio/${id}`}
         onClick={() => incrementPortfolioView({ variables: { artist_id: id } })}
