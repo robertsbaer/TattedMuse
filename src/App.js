@@ -1,4 +1,3 @@
-// src/App.js
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -7,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { NhostClient, NhostProvider, useUserData } from "@nhost/react";
-import { ApolloProvider } from "@apollo/client";
+import { ApolloProvider, useQuery } from "@apollo/client"; // Import useQuery here
 import client from "./apolloClient";
 import ArtistList from "./ArtistList";
 import SignupPage from "./SignupPage";
@@ -19,8 +18,7 @@ import AddAds from "./AddAds";
 import AdInfo from "./AdInfo";
 import AdminDashboard from "./AdminDashboard";
 import Header from "./Header";
-import { useQuery } from "@apollo/client";
-import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries";
+import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries"; // Import the query here
 import styled from "styled-components";
 
 const nhost = new NhostClient({
@@ -38,7 +36,25 @@ const AppContainer = styled.div`
   font-family: "Arial", sans-serif;
 `;
 
-// ProtectedRoute component to handle role-based routing for the artist
+// Admin Protected Route
+const ProtectedRouteForAdmin = ({ element: Component, ...rest }) => {
+  const user = useUserData();
+  const adminEmail = "robertsbaer@gmail.com"; // Add the admin email here
+
+  // Check if the user is logged in and has the admin email
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (user.email !== adminEmail) {
+    return <Navigate to="/" />;
+  }
+
+  // If the user is an admin, render the component
+  return <Component {...rest} />;
+};
+
+// Protect routes based on artist roles
 const ProtectedRouteForArtist = ({ element: Component, ...rest }) => {
   const user = useUserData();
   const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
@@ -47,14 +63,13 @@ const ProtectedRouteForArtist = ({ element: Component, ...rest }) => {
     fetchPolicy: "cache-first",
   });
 
-  if (loading) return <p>Loading...</p>; // Add a loading state
+  if (loading) return <p>Loading...</p>;
   if (data && data.tattoo_artists.length > 0) {
     return <Component {...rest} />;
   }
   return <Navigate to="/user-dashboard" />;
 };
 
-// ProtectedRoute component to handle role-based routing for the user
 const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
   const user = useUserData();
   const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
@@ -63,7 +78,7 @@ const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
     fetchPolicy: "cache-first",
   });
 
-  if (loading) return <p>Loading...</p>; // Add a loading state
+  if (loading) return <p>Loading...</p>;
   if (!data || data.tattoo_artists.length === 0) {
     return <Component {...rest} />;
   }
@@ -71,8 +86,6 @@ const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
 };
 
 const App = () => {
-  const user = useUserData();
-
   return (
     <NhostProvider nhost={nhost}>
       <ApolloProvider client={client}>
@@ -87,28 +100,29 @@ const App = () => {
                 path="/portfolio/:artistId"
                 element={<ArtistPortfolio />}
               />
-              {/* Protect artist and user dashboards */}
-              {user ? (
-                <>
-                  <Route
-                    path="/dashboard"
-                    element={<ProtectedRouteForArtist element={Dashboard} />}
-                  />
-                  <Route
-                    path="/user-dashboard"
-                    element={<ProtectedRouteForUser element={UserDashboard} />}
-                  />
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                  <Route path="/create-ad" element={<AddAds />} />
-                </>
-              ) : (
-                <>
-                  <Route path="/404" element={<Navigate to="/" />} />
 
-                  <Route path="*" element={<LoginPage />} />
-                </>
-              )}
+              {/* Protect artist and user dashboards */}
+              <Route
+                path="/dashboard"
+                element={<ProtectedRouteForArtist element={Dashboard} />}
+              />
+              <Route
+                path="/user-dashboard"
+                element={<ProtectedRouteForUser element={UserDashboard} />}
+              />
+
+              {/* Admin Dashboard and Create Ad with Protected Route */}
+              <Route
+                path="/admin-dashboard"
+                element={<ProtectedRouteForAdmin element={AdminDashboard} />}
+              />
+              <Route
+                path="/create-ad"
+                element={<ProtectedRouteForAdmin element={AddAds} />}
+              />
+
               <Route path="/ad-info" element={<AdInfo />} />
+              <Route path="*" element={<Navigate to="/404" />} />
             </Routes>
           </Router>
         </AppContainer>

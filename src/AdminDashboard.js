@@ -39,14 +39,12 @@ const AdminDashboard = () => {
     variables: { searchTerm: `%${searchQuery}%`, limit, offset },
   });
 
-  useEffect(() => {
-    if (user) {
-      const adminEmail = "robertsbaer@gmail.com";
-      if (user.email !== adminEmail) {
-        navigate("/");
-      }
-    }
-  }, [user, navigate]);
+  // useEffect(() => {
+  //   const adminEmail = process.env.REACT_APP_ADMIN_EMAIL;
+  //   if (user && user.email !== adminEmail) {
+  //     navigate("/");
+  //   }
+  // }, [user, navigate]);
 
   useEffect(() => {
     if (artistData) {

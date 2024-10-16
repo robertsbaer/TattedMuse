@@ -48,6 +48,8 @@ const Header = () => {
     fetchPolicy: "cache-first",
   });
 
+  const adminEmail = "robertsbaer@gmail.com"; // Add the admin email check here
+
   // Function to handle redirecting to the homepage
   const handleExit = () => {
     navigate("/"); // Redirect to the homepage
@@ -75,11 +77,13 @@ const Header = () => {
           ) : (
             <DashboardButton
               onClick={() =>
-                navigate(
-                  data?.tattoo_artists.length > 0
-                    ? "/dashboard"
-                    : "/user-dashboard"
-                )
+                user.email === adminEmail
+                  ? navigate("/admin-dashboard")
+                  : navigate(
+                      data?.tattoo_artists.length > 0
+                        ? "/dashboard"
+                        : "/user-dashboard"
+                    )
               }
             >
               <FaUserCircle />
