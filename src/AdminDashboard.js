@@ -40,7 +40,7 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const adminEmail = process.env.REACT_APP_ADMIN_EMAIL;
+    const adminEmail = "robertsbaer@gmail.com";
     if (user && user.email !== adminEmail) {
       navigate("/");
     }
