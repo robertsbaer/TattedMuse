@@ -6,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { NhostClient, NhostProvider, useUserData } from "@nhost/react";
-import { ApolloProvider, useQuery } from "@apollo/client"; // Import useQuery here
+import { ApolloProvider, useQuery } from "@apollo/client";
 import client from "./apolloClient";
 import ArtistList from "./ArtistList";
 import SignupPage from "./SignupPage";
@@ -18,7 +18,7 @@ import AddAds from "./AddAds";
 import AdInfo from "./AdInfo";
 import AdminDashboard from "./AdminDashboard";
 import Header from "./Header";
-import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries"; // Import the query here
+import { GET_TATTOO_ARTIST_BY_USER_ID } from "./queries";
 import styled from "styled-components";
 
 const nhost = new NhostClient({
@@ -41,22 +41,14 @@ const ProtectedRouteForAdmin = ({ element: Component, ...rest }) => {
   const user = useUserData();
   const adminEmail = "robertsbaer@gmail.com";
 
-  // If user data is still loading, show a loading state
-  if (user === null) {
-    return <p>Loading...</p>; // Or a better loading component/spinner
-  }
-
-  // If no user is logged in, redirect to login
   if (!user) {
     return <Navigate to="/login" />;
   }
 
-  // If the user is not the admin, redirect to home
   if (user.email !== adminEmail) {
     return <Navigate to="/" />;
   }
 
-  // If the user is the admin, render the component
   return <Component {...rest} />;
 };
 
@@ -76,18 +68,37 @@ const ProtectedRouteForArtist = ({ element: Component, ...rest }) => {
   return <Navigate to="/user-dashboard" />;
 };
 
+// Prevent admin from accessing user dashboard
 const ProtectedRouteForUser = ({ element: Component, ...rest }) => {
   const user = useUserData();
+  const adminEmail = "robertsbaer@gmail.com";
+
+  // Ensure the hook is always called
   const { data, loading } = useQuery(GET_TATTOO_ARTIST_BY_USER_ID, {
     variables: { user_id: user?.id },
     skip: !user?.id,
     fetchPolicy: "cache-first",
   });
 
+  // Handle early returns based on user and admin check
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  // Check if the user is an admin, and if so, redirect to admin dashboard
+  if (user.email === adminEmail) {
+    return <Navigate to="/admin-dashboard" />;
+  }
+
+  // Now handle loading and data responses for regular users
   if (loading) return <p>Loading...</p>;
+
+  // If the user is not an artist, render the user dashboard
   if (!data || data.tattoo_artists.length === 0) {
     return <Component {...rest} />;
   }
+
+  // If the user is an artist, redirect to the artist dashboard
   return <Navigate to="/dashboard" />;
 };
 

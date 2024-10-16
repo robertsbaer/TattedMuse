@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useApolloClient } from "@apollo/client";
 import { useUserData } from "@nhost/react";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+
 import {
   GET_ALL_USERS,
   GET_FILTERED_ARTISTS,
@@ -11,6 +13,21 @@ import {
 } from "./queries";
 import "./AdminDashboard.css";
 import ExpiredAdsList from "./ExpiredAdsList";
+import { useSignOut } from "@nhost/react"; // Import the sign-out hook
+
+const SignOutButton = styled.button`
+  background-color: #e91e63;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #ff0000;
+  }
+`;
 
 const AdminDashboard = () => {
   const [artists, setArtists] = useState([]);
@@ -24,12 +41,18 @@ const AdminDashboard = () => {
   const user = useUserData();
   const navigate = useNavigate();
   const client = useApolloClient();
+  const { signOut } = useSignOut();
 
   const { data: userData } = useQuery(GET_ALL_USERS);
 
   const [deleteTattooArtist] = useMutation(DELETE_TATTOO_ARTIST);
   const [deleteInvite] = useMutation(DELETE_INVITE);
   const [deleteWorkImage] = useMutation(DELETE_WORK_IMAGE);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login"); // Redirect to login page after sign-out
+  };
 
   const {
     data: artistData,
@@ -220,6 +243,7 @@ const AdminDashboard = () => {
         >
           Invites
         </button>
+        <SignOutButton onClick={handleSignOut}>Sign Out</SignOutButton>
       </nav>
 
       <section id="stats-section" className="section">
@@ -368,6 +392,7 @@ const AdminDashboard = () => {
               ))}
         </ul>
       </section>
+      <SignOutButton onClick={handleSignOut}>Sign Out</SignOutButton>
     </div>
   );
 };

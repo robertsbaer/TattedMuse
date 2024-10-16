@@ -216,6 +216,7 @@ const LikedArtists = () => {
         <FavoriteArtistsGrid>
           {favoriteArtists.map(({ tattoo_artist }) => (
             <ArtistCard key={tattoo_artist.id}>
+              {/* Link to artist portfolio */}
               <Link to={`/portfolio/${tattoo_artist.id}`}>
                 <ArtistImage
                   src={tattoo_artist.imageurl}
@@ -224,25 +225,26 @@ const LikedArtists = () => {
                 <ArtistName>{tattoo_artist.name}</ArtistName>
                 <ArtistLocation>{tattoo_artist.shop_name}</ArtistLocation>
                 <ArtistLocation>{tattoo_artist.address}</ArtistLocation>
-
-                <SocialLinks>
-                  {tattoo_artist.instagram && (
-                    <SocialIcon href={tattoo_artist.instagram} target="_blank">
-                      <FaInstagram />
-                    </SocialIcon>
-                  )}
-                  {tattoo_artist.twitter && (
-                    <SocialIcon href={tattoo_artist.twitter} target="_blank">
-                      <FaTwitter />
-                    </SocialIcon>
-                  )}
-                  {tattoo_artist.facebook && (
-                    <SocialIcon href={tattoo_artist.facebook} target="_blank">
-                      <FaFacebook />
-                    </SocialIcon>
-                  )}
-                </SocialLinks>
               </Link>
+
+              {/* Social media links outside of the Link component */}
+              <SocialLinks>
+                {tattoo_artist.instagram && (
+                  <SocialIcon href={tattoo_artist.instagram} target="_blank">
+                    <FaInstagram />
+                  </SocialIcon>
+                )}
+                {tattoo_artist.twitter && (
+                  <SocialIcon href={tattoo_artist.twitter} target="_blank">
+                    <FaTwitter />
+                  </SocialIcon>
+                )}
+                {tattoo_artist.facebook && (
+                  <SocialIcon href={tattoo_artist.facebook} target="_blank">
+                    <FaFacebook />
+                  </SocialIcon>
+                )}
+              </SocialLinks>
 
               <UnlikeButton onClick={() => handleUnlike(tattoo_artist.id)}>
                 Unlike

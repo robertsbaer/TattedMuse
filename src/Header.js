@@ -50,36 +50,41 @@ const Header = () => {
 
   const adminEmail = "robertsbaer@gmail.com";
 
-  // Function to handle redirecting to the homepage
   const handleExit = () => {
     navigate("/"); // Redirect to the homepage
   };
 
-  // Ensure we only navigate when the user data is fully loaded
-  if (user === null) {
-    return <p>Loading...</p>; // Add a loading spinner here if necessary
+  if (location.pathname === "/login" || location.pathname === "/signup") {
+    return (
+      <HeaderContainer>
+        <DashboardButton onClick={handleExit}>
+          <FaArrowLeft />
+        </DashboardButton>
+      </HeaderContainer>
+    );
   }
 
+  // Ensure proper navigation logic for admin and non-admin users
   return (
     <HeaderContainer>
       {isAuthenticated ? (
         <>
-          {/* If the user is on a dashboard, show the back arrow */}
           {location.pathname.includes("dashboard") ? (
             <DashboardButton onClick={handleExit}>
               <FaArrowLeft />
             </DashboardButton>
           ) : (
             <DashboardButton
-              onClick={() =>
-                user.email === adminEmail
-                  ? navigate("/admin-dashboard")
-                  : navigate(
-                      data?.tattoo_artists.length > 0
-                        ? "/dashboard"
-                        : "/user-dashboard"
-                    )
-              }
+              onClick={() => {
+                // Ensure admin check is done first
+                if (user.email === adminEmail) {
+                  navigate("/admin-dashboard");
+                } else if (data?.tattoo_artists.length > 0) {
+                  navigate("/dashboard");
+                } else {
+                  navigate("/user-dashboard");
+                }
+              }}
             >
               <FaUserCircle />
             </DashboardButton>
@@ -87,16 +92,9 @@ const Header = () => {
         </>
       ) : (
         <>
-          {/* If the user is on login or signup page, show the back arrow to go to home */}
-          {location.pathname === "/login" || location.pathname === "/signup" ? (
-            <DashboardButton onClick={handleExit}>
-              <FaArrowLeft />
-            </DashboardButton>
-          ) : (
-            <DashboardButton onClick={() => navigate("/signup")}>
-              <FaSignInAlt />
-            </DashboardButton>
-          )}
+          <DashboardButton onClick={() => navigate("/signup")}>
+            <FaSignInAlt />
+          </DashboardButton>
         </>
       )}
     </HeaderContainer>
