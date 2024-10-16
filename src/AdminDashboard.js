@@ -40,9 +40,11 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const adminEmail = "robertsbaer@gmail.com";
-    if (user && user.email !== adminEmail) {
-      navigate("/");
+    if (user) {
+      const adminEmail = "robertsbaer@gmail.com";
+      if (user.email !== adminEmail) {
+        navigate("/");
+      }
     }
   }, [user, navigate]);
 
