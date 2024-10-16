@@ -3,6 +3,20 @@ import { gql } from "@apollo/client";
 
 export const GET_FILTERED_ARTISTS = gql`
   query GetFilteredArtists($searchTerm: String!, $limit: Int, $offset: Int) {
+    tattoo_artists_aggregate(
+      where: {
+        _or: [
+          { name: { _ilike: $searchTerm } }
+          { location: { _ilike: $searchTerm } }
+          { address: { _ilike: $searchTerm } }
+          { styles: { style: { _ilike: $searchTerm } } }
+        ]
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
     tattoo_artists(
       where: {
         _or: [
@@ -18,7 +32,12 @@ export const GET_FILTERED_ARTISTS = gql`
       id
       name
       location
+      address
+      shop_name
       imageurl
+      instagram
+      twitter
+      facebook
       work_images(limit: 5) {
         imageurl
       }
@@ -464,6 +483,67 @@ export const GET_WORK_IMAGES_BY_ARTIST_ID = gql`
     work_images(where: { tattoo_artist_id: { _eq: $artistId } }) {
       id
       imageurl
+    }
+  }
+`;
+
+export const ADD_AD = gql`
+  mutation AddAd(
+    $title: String!
+    $text: String!
+    $imageUrl: String!
+    $externalUrl: String!
+    $displayFrequency: Int!
+    $expirationDate: timestamp!
+    $created_at: timestamp!
+    $updated_at: timestamp!
+  ) {
+    insert_ads_one(
+      object: {
+        title: $title
+        text: $text
+        image_url: $imageUrl
+        external_url: $externalUrl
+        display_frequency: $displayFrequency
+        expiration_date: $expirationDate
+        created_at: $created_at
+        updated_at: $updated_at
+      }
+    ) {
+      id
+      title
+    }
+  }
+`;
+
+export const GET_ADS = gql`
+  query GetAds {
+    ads(order_by: { created_at: desc }) {
+      id
+      title
+      text
+      image_url
+      external_url
+      display_frequency
+      expiration_date
+    }
+  }
+`;
+
+export const GET_EXPIRED_ADS = gql`
+  query GetExpiredAds {
+    ads(where: { expiration_date: { _lt: "now()" } }) {
+      id
+      title
+      expiration_date
+    }
+  }
+`;
+
+export const DELETE_AD = gql`
+  mutation DeleteAd($id: uuid!) {
+    delete_ads_by_pk(id: $id) {
+      id
     }
   }
 `;

@@ -16,12 +16,12 @@ import {
 } from "./queries";
 
 const ProfileContainer = styled.div`
-  width: 33%;
+  width: 100%; /* Full width for consistency */
+  max-width: 600px; /* Set a max width to prevent it from being too wide */
   background-color: #1e1e1e;
   padding: 20px;
   border-radius: 8px;
   margin: 20px 0;
-  max-width: 90vw;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@ const ProfileContainer = styled.div`
   overflow: hidden;
 
   @media (max-width: 1024px) {
-    width: 80%;
+    width: 100%;
   }
 
   @media (max-width: 768px) {
@@ -194,59 +194,12 @@ const ArtistProfile = ({
     }
 
     if (liked) {
-      // Unlike the artist (remains the same)
       unlikeArtist({
         variables: { user_id: userId, artist_id: id },
-        update(cache, { data }) {
-          if (!data || !data.delete_user_favorite_artists) {
-            console.error("No data returned from unlikeArtist mutation.");
-            return;
-          }
-
-          cache.modify({
-            fields: {
-              user_favorite_artists(existingFavoritesRefs = [], { readField }) {
-                return existingFavoritesRefs.filter(
-                  (favoriteRef) =>
-                    readField("id", favoriteRef.tattoo_artist) !== id
-                );
-              },
-            },
-          });
-        },
       }).then(() => setLiked(false));
     } else {
-      // Like the artist (modified cache handling)
       addFavoriteArtist({
         variables: { user_id: userId, artist_id: id },
-        update(cache, { data }) {
-          const { insert_user_favorite_artists_one: newFavorite } = data;
-
-          if (!newFavorite || !newFavorite.tattoo_artist) {
-            console.error("No artist data returned from addFavoriteArtist.");
-            return;
-          }
-
-          const existingFavorites = cache.readQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-          });
-
-          // Write the new data back into the cache
-          cache.writeQuery({
-            query: GET_USER_FAVORITE_ARTISTS,
-            variables: { user_id: userId },
-            data: {
-              user_favorite_artists: [
-                ...existingFavorites.user_favorite_artists,
-                newFavorite, // Append the new artist to the existing list
-              ].map((favorite) => ({
-                ...favorite,
-                __typename: "user_favorite_artists", // Ensure correct typename
-              })),
-            },
-          });
-        },
       }).then(() => setLiked(true));
     }
   };
@@ -257,9 +210,6 @@ const ArtistProfile = ({
   return (
     <ProfileContainer>
       <ArtistImage src={imageurl} alt={`${name}'s profile`} />
-      {/* <LikeButton $liked={liked} onClick={handleLikeToggle}>
-        {liked ? "Remove Artist from Favorites" : "Save Artist"}
-      </LikeButton> */}
       <ArtistName>{name}</ArtistName>
       <p>{location}</p>
       <h3>Styles</h3>

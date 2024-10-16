@@ -1,0 +1,87 @@
+/* ArtistList.css */
+
+/* Basic container for the entire artist list */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* List container for organizing artists and ads */
+.list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 90px;
+}
+
+/* Individual artist profile styling */
+.artist-profile {
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+/* Artist name style */
+.artist-name {
+  font-size: 1.5rem;
+  color: #e91e63;
+  margin-bottom: 10px;
+}
+
+/* Social links container */
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Social media icons */
+.social-icon {
+  color: #ffffff;
+  font-size: 24px;
+  text-decoration: none;
+}
+
+/* Styling for the image of the artist */
+.artist-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e91e63;
+  margin-bottom: 15px;
+}
+
+/* Style for the work images in the profile */
+.work-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+/* Style for loading more artists */
+.load-more {
+  background-color: #e91e63;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.load-more:hover {
+  background-color: #ff4081;
+}

@@ -2,27 +2,38 @@ import { useQuery } from "@apollo/client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ArtistProfile from "./ArtistProfile";
-import { GET_FILTERED_ARTISTS } from "./queries";
+import { GET_FILTERED_ARTISTS, GET_ADS } from "./queries";
 import SearchBar from "./SearchBar";
+import AdCard from "./AdCard";
 
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 `;
 
 const ListContainer = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center; /* Centering the content horizontally */
   padding-top: 90px;
+`;
+
+const ArtistWrapper = styled.div`
+  width: 100%;
+  max-width: 800px; /* Set a maximum width to prevent them from being too wide */
+  margin-bottom: 20px; /* Add spacing between artist cards */
+  display: flex;
+  justify-content: center; /* Center the artist cards */
 `;
 
 const ArtistList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [artists, setArtists] = useState([]);
+  const [ads, setAds] = useState([]);
   const loadingMoreRef = useRef(false);
   const limit = 10;
 
@@ -37,8 +48,10 @@ const ArtistList = () => {
       limit,
       offset: page * limit,
     },
-    fetchPolicy: "cache-first", // Use cache-first to reduce network requests
+    fetchPolicy: "cache-first",
   });
+
+  const { data: adData } = useQuery(GET_ADS); // Fetching ads
 
   useEffect(() => {
     if (data && data.tattoo_artists) {
@@ -48,7 +61,18 @@ const ArtistList = () => {
           : [...prevArtists, ...data.tattoo_artists]
       );
     }
-  }, [data, page]);
+
+    if (adData && adData.ads) {
+      const now = new Date(); // Get the current local time
+
+      const validAds = adData.ads.filter((ad) => {
+        const expirationDate = new Date(ad.expiration_date);
+        return expirationDate > now; // Compare expiration date with current local time
+      });
+
+      setAds(validAds);
+    }
+  }, [data, adData, page]);
 
   const debounce = (func, delay) => {
     let timeout;
@@ -105,7 +129,18 @@ const ArtistList = () => {
           resetPage={resetPage}
         />
         {artists.length > 0 ? (
-          artists.map((artist) => <ArtistProfile key={artist.id} {...artist} />)
+          artists.map((artist, index) => (
+            <React.Fragment key={artist.id}>
+              <ArtistWrapper>
+                <ArtistProfile {...artist} />
+              </ArtistWrapper>
+              {/* Show an ad after every 9 artists or if there's only 1 artist */}
+              {((artists.length === 1 && index === 0) || index % 9 === 8) &&
+              ads.length > 0 ? (
+                <AdCard ad={ads[index % ads.length]} />
+              ) : null}
+            </React.Fragment>
+          ))
         ) : (
           <p>No artists found matching your search.</p>
         )}

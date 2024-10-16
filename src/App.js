@@ -15,6 +15,7 @@ import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
 import ArtistPortfolio from "./ArtistPortfolio";
 import UserDashboard from "./UserDashboard";
+import AddAds from "./AddAds";
 import AdInfo from "./AdInfo";
 import AdminDashboard from "./AdminDashboard";
 import Header from "./Header";
@@ -98,6 +99,7 @@ const App = () => {
                     element={<ProtectedRouteForUser element={UserDashboard} />}
                   />
                   <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                  <Route path="/create-ad" element={<AddAds />} />
                 </>
               ) : (
                 <>
