@@ -39,18 +39,24 @@ const AppContainer = styled.div`
 // Admin Protected Route
 const ProtectedRouteForAdmin = ({ element: Component, ...rest }) => {
   const user = useUserData();
-  const adminEmail = "robertsbaer@gmail.com"; // Add the admin email here
+  const adminEmail = "robertsbaer@gmail.com";
 
-  // Check if the user is logged in and has the admin email
+  // If user data is still loading, show a loading state
+  if (user === null) {
+    return <p>Loading...</p>; // Or a better loading component/spinner
+  }
+
+  // If no user is logged in, redirect to login
   if (!user) {
     return <Navigate to="/login" />;
   }
 
+  // If the user is not the admin, redirect to home
   if (user.email !== adminEmail) {
     return <Navigate to="/" />;
   }
 
-  // If the user is an admin, render the component
+  // If the user is the admin, render the component
   return <Component {...rest} />;
 };
 

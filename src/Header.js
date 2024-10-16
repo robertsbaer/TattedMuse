@@ -48,29 +48,24 @@ const Header = () => {
     fetchPolicy: "cache-first",
   });
 
-  const adminEmail = "robertsbaer@gmail.com"; // Add the admin email check here
+  const adminEmail = "robertsbaer@gmail.com";
 
   // Function to handle redirecting to the homepage
   const handleExit = () => {
     navigate("/"); // Redirect to the homepage
   };
 
-  // Determine if the user is on a dashboard page
-  const isDashboard =
-    location.pathname === "/dashboard" ||
-    location.pathname === "/user-dashboard" ||
-    location.pathname === "/admin-dashboard";
-
-  // Determine if the user is on login or signup page
-  const isAuthPage =
-    location.pathname === "/login" || location.pathname === "/signup";
+  // Ensure we only navigate when the user data is fully loaded
+  if (user === null) {
+    return <p>Loading...</p>; // Add a loading spinner here if necessary
+  }
 
   return (
     <HeaderContainer>
       {isAuthenticated ? (
         <>
           {/* If the user is on a dashboard, show the back arrow */}
-          {isDashboard ? (
+          {location.pathname.includes("dashboard") ? (
             <DashboardButton onClick={handleExit}>
               <FaArrowLeft />
             </DashboardButton>
@@ -93,7 +88,7 @@ const Header = () => {
       ) : (
         <>
           {/* If the user is on login or signup page, show the back arrow to go to home */}
-          {isAuthPage ? (
+          {location.pathname === "/login" || location.pathname === "/signup" ? (
             <DashboardButton onClick={handleExit}>
               <FaArrowLeft />
             </DashboardButton>
