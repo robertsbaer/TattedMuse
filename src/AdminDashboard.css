@@ -8,30 +8,6 @@
   --highlight-color: #e91e63;
 }
 
-a {
-  text-decoration: none;
-  color: #e91e63;
-}
-
-a:visited {
-  color: #e91e63;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: none;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-li {
-  list-style-type: none;
-}
-
 .admin-dashboard {
   font-family: Arial, sans-serif;
   padding: 20px;
@@ -100,6 +76,15 @@ li {
   margin-top: 8px;
 }
 
+ul,
+li {
+  list-style: none;
+}
+.social-link {
+  text-decoration: none;
+  color: var(--button-color);
+  font-size: 0.9rem;
+}
 .work-images {
   display: flex;
   flex-wrap: wrap;

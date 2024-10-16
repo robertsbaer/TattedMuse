@@ -58,7 +58,7 @@ const SocialLinks = styled.div`
 `;
 
 const SocialIcon = styled.a`
-  color: #ffffff;
+  color: #e91e63;
   font-size: 24px;
 `;
 

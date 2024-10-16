@@ -294,6 +294,7 @@ const AdminDashboard = () => {
                   href={artist.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="social-link"
                 >
                   Instagram
                 </a>
@@ -302,6 +303,7 @@ const AdminDashboard = () => {
                   href={artist.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="social-link"
                 >
                   Twitter
                 </a>
@@ -310,6 +312,7 @@ const AdminDashboard = () => {
                   href={artist.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="social-link"
                 >
                   Facebook
                 </a>
