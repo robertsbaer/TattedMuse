@@ -63,8 +63,7 @@ const Paragraph = styled.p`
 
 const AdFormats = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: center;
 
   @media (max-width: 768px) {
     flex-direction: column; /* Stack elements vertically on mobile */
@@ -72,10 +71,10 @@ const AdFormats = styled.div`
 `;
 
 const AdFormatBox = styled.div`
-  width: 45%;
+  width: 60%;
   background-color: #333333;
-  margin: 10px 0;
-  padding: 20px;
+  margin: 20px 0;
+  padding: 40px;
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -91,12 +90,12 @@ const AdFormatBox = styled.div`
 `;
 
 const AdFormatTitle = styled.h3`
-  font-size: 1.5rem;
-  margin-bottom: 10px;
+  font-size: 2rem;
+  margin-bottom: 20px;
   color: #ff4081;
 
   @media (max-width: 768px) {
-    font-size: 1.3rem; /* Adjust font size for mobile */
+    font-size: 1.5rem; /* Adjust font size for mobile */
   }
 `;
 
@@ -142,19 +141,16 @@ const AdInfo = () => {
         <SectionHeader>Ad Formats We Offer</SectionHeader>
         <AdFormats>
           <AdFormatBox>
-            <AdFormatTitle>Banner Ads</AdFormatTitle>
-            <Paragraph>
-              Showcase your brand with eye-catching banners that appear at the
-              top of every page. A great way to increase visibility and attract
-              clicks.
-            </Paragraph>
-          </AdFormatBox>
-
-          <AdFormatBox>
             <AdFormatTitle>Post Ads</AdFormatTitle>
             <Paragraph>
               Our post ads are ideal for reaching users while they browse
-              through tattoo artist profiles.
+              through tattoo artist profiles. With a prominent placement, you
+              can showcase your brand and products to a highly engaged audience.
+            </Paragraph>
+            <Paragraph>
+              By choosing our post ads, you'll get the opportunity to reach a
+              targeted audience, increase brand awareness, and drive traffic to
+              your website.
             </Paragraph>
           </AdFormatBox>
         </AdFormats>
